@@ -15,5 +15,34 @@ package frc.robot;
 public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
+    public static final int kOperatorControllerPort = 1;
+
+
+
+
+
   }
+  public static final class IntakingConstants{
+public static final int INTAKE_BOTTOM_ROLLER_ID = 4;
+public static final int INTAKE_TOP_ROLLER_ID = 5;
+public static final double INTAKING_INTAKE_SPEED = 0.2;
+
+}
+
+public static final class ShootingConstants{
+
+
+    // Voltage values for various fuel operations. These values may need to be tuned
+    // based on exact robot construction.
+    // See the Software Guide for tuning information
+
+    public static final double LAUNCHING_FEEDER_SPEED = .4;
+    public static final double LAUNCHING_LAUNCHER_SPEED = .6;
+    public static final double SPIN_UP_FEEDER_SPEED = -0.4;
+    public static final double SPIN_UP_SECONDS = 2;
+    public static final int LAUNCH_WHEEL_ID = 6;
+    public static final int FEEDER_WHEEL_ID = 7;
+
+
+}
 }

@@ -4,37 +4,56 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkFlexConfig;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import static frc.robot.Constants.IntakingConstants. *;
 
-public class ExampleSubsystem extends SubsystemBase {
+
+
+public class intakeSubsystem extends SubsystemBase {
+
+  private final SparkFlex intakeTopRoller;
+  private final SparkFlex intakebottomRoller;
   /** Creates a new ExampleSubsystem. */
-  public ExampleSubsystem() {}
+  public intakeSubsystem() {
+
+    intakeTopRoller = new SparkFlex(INTAKE_TOP_ROLLER_ID, MotorType.kBrushed);
+    intakebottomRoller = new SparkFlex(INTAKE_BOTTOM_ROLLER_ID, MotorType.kBrushed);
+
+
+
+    SparkFlexConfig intakeConfig = new SparkFlexConfig();
+    intakeTopRoller.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    intakebottomRoller.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+
+
+  }
+
+
+  public void setIntakein(double speed){
+    intakeTopRoller.set(speed);
+    intakebottomRoller.set(speed);
+  }
+
+  public void stop(){
+  intakeTopRoller.set(0);
+  intakebottomRoller.set(0);
+
+  }
+
 
   /**
    * Example command factory method.
    *
    * @return a command
    */
-  public Command exampleMethodCommand() {
-    // Inline construction of command goes here.
-    // Subsystem::RunOnce implicitly requires `this` subsystem.
-    return runOnce(
-        () -> {
-          /* one-time action goes here */
-        });
-  }
-
-  /**
-   * An example method querying a boolean state of the subsystem (for example, a digital sensor).
-   *
-   * @return value of some boolean subsystem state, such as a digital sensor.
-   */
-  public boolean exampleCondition() {
-    // Query some boolean state, such as a digital sensor.
-    return false;
-  }
-
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
