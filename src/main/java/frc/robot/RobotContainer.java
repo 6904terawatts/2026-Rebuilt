@@ -9,9 +9,14 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
+import frc.robot.commands.Eject;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.Intake;
+import frc.robot.commands.LaunchSequence;
 import frc.robot.subsystems.ArcadeDrive;
+import frc.robot.subsystems.CANFuelSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
+import static frc.robot.Constants.OperatorConstants.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -20,12 +25,16 @@ import frc.robot.subsystems.ExampleSubsystem;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private static final int OPERATOR_CONTROLLER_PORT = 0;
+    // The robot's subsystems and commands are defined here...
+    private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+   private final CANFuelSubsystem fuelSubsystem = new CANFuelSubsystem();
+    // Replace with CommandPS4Controller or CommandJoystick if needed
+    private final CommandXboxController m_driverController =
+        new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  
+  private final CommandXboxController operatorController = new CommandXboxController(
+        OPERATOR_CONTROLLER_PORT);
 
   private final ArcadeDrive m_arcadeDrive = new ArcadeDrive();
 
@@ -59,6 +68,16 @@ public class RobotContainer {
     double rotSpeed =
         Math.pow(m_driverController.getRightX(), 3) + Math.pow(m_driverController.getRightX(), 1);
     m_arcadeDrive.setDefaultCommand(m_arcadeDrive.ArcadeDriveCommand(fwdSpeed, rotSpeed));
+
+    operatorController.leftBumper().whileTrue(new Intake(fuelSubsystem));
+    // While the right bumper on the operator controller is held, spin up for 1
+    // second, then launch fuel. When the button is released, stop.
+    operatorController.rightBumper().whileTrue(new LaunchSequence(fuelSubsystem));
+    // While the A button is held on the operator controller, eject fuel back out
+    // the intake
+    operatorController.a().whileTrue(new Eject(fuelSubsystem));
+    fuelSubsystem.setDefaultCommand(fuelSubsystem.run(() -> fuelSubsystem.stop()));
+
   }
 
   /**
