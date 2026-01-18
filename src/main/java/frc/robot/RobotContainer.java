@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.subsystems.ArcadeDrive;
 import frc.robot.subsystems.ExampleSubsystem;
 
 /**
@@ -26,9 +27,12 @@ public class RobotContainer {
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
+  private final ArcadeDrive m_arcadeDrive = new ArcadeDrive();
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
+
     configureBindings();
   }
 
@@ -49,6 +53,12 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+
+    double fwdSpeed =
+        Math.pow(m_driverController.getLeftY(), 3) + Math.pow(m_driverController.getLeftY(), 1);
+    double rotSpeed =
+        Math.pow(m_driverController.getRightX(), 3) + Math.pow(m_driverController.getRightX(), 1);
+    m_arcadeDrive.setDefaultCommand(m_arcadeDrive.ArcadeDriveCommand(fwdSpeed, rotSpeed));
   }
 
   /**
