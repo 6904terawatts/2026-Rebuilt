@@ -18,10 +18,10 @@ public class ArcadeDrive extends SubsystemBase {
   /** Creates a new TankDrive. */
   private final CANBus kCANBus = new CANBus("rio");
 
-  private final TalonFX leftLeader = new TalonFX(1, kCANBus);
-  private final TalonFX leftFollower = new TalonFX(2, kCANBus);
-  private final TalonFX rightLeader = new TalonFX(3, kCANBus);
-  private final TalonFX rightFollower = new TalonFX(4, kCANBus);
+  private final TalonFX leftLeader = new TalonFX(22, kCANBus);
+  private final TalonFX leftFollower = new TalonFX(24, kCANBus);
+  private final TalonFX rightLeader = new TalonFX(21, kCANBus);
+  private final TalonFX rightFollower = new TalonFX(20, kCANBus);
 
   private final DutyCycleOut leftOut = new DutyCycleOut(0);
   private final DutyCycleOut rightOut = new DutyCycleOut(0);
@@ -55,8 +55,8 @@ public class ArcadeDrive extends SubsystemBase {
   }
 
   public void arcadeDrive(double leftSpeed, double rightSpeed) {
-    leftLeader.setControl(leftOut);
-    rightLeader.setControl(rightOut);
+    leftLeader.setControl(leftOut.withOutput(leftSpeed));
+    rightLeader.setControl(rightOut.withOutput(rightSpeed));
   }
 
   public Command ArcadeDriveCommand(double leftSpeed, double rightSpeed) {
