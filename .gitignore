@@ -38,6 +38,7 @@
 ### Java ###
 # Compiled class file
 *.class
+*.class
 
 # Log file
 *.log
@@ -188,3 +189,7 @@ compile_commands.json
 
 # Build Constants
 src/main/java/frc/robot/BuildConstants.java
+build/classes/java/main/frc/robot/RobotContainer.class
+bin/main/frc/robot/RobotContainer.class
+bin/main/frc/robot/Robot.class
+build/classes/java/main/frc/robot/Robot.class

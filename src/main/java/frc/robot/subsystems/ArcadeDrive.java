@@ -11,8 +11,10 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.DoubleSupplier;
 
 public class ArcadeDrive extends SubsystemBase {
   /** Creates a new TankDrive. */
@@ -51,15 +53,18 @@ public class ArcadeDrive extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-
-  }
-
-  public void arcadeDrive(double leftSpeed, double rightSpeed) {
     leftLeader.setControl(leftOut);
     rightLeader.setControl(rightOut);
   }
 
-  public Command ArcadeDriveCommand(double leftSpeed, double rightSpeed) {
+  public void arcadeDrive(DoubleSupplier leftSpeed, DoubleSupplier rightSpeed) {
+    leftOut.Output = leftSpeed.getAsDouble();
+    rightOut.Output = rightSpeed.getAsDouble();
+  }
+
+  public Command ArcadeDriveCommand(DoubleSupplier leftSpeed, DoubleSupplier rightSpeed) {
+    SmartDashboard.putNumber("LeftSpeed", leftSpeed.getAsDouble());
+    SmartDashboard.putNumber("RightSpeed:", leftSpeed.getAsDouble());
     return run(
         () -> {
           arcadeDrive(leftSpeed, rightSpeed);
