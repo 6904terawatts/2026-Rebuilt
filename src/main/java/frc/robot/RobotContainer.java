@@ -5,7 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -57,15 +56,14 @@ public class RobotContainer {
     // // cancelling on release.
     // m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
 
-    fwdSpeed =
-        Math.pow(m_driverController.getLeftY(), 3) + Math.pow(m_driverController.getLeftY(), 1);
-    rotSpeed =
-        Math.pow(m_driverController.getRightX(), 3) + Math.pow(m_driverController.getRightX(), 1);
-    SmartDashboard.putNumber("fwdSpeed", fwdSpeed);
-    SmartDashboard.putNumber("rotSpeed", rotSpeed);
     m_arcadeDrive.setDefaultCommand(
-        m_arcadeDrive.ArcadeDriveCommand(
-            () -> m_driverController.getLeftY(), () -> m_driverController.getLeftX()));
+        m_arcadeDrive.run(
+            () ->
+                m_arcadeDrive.arcadeDrive(
+                    Math.pow(m_driverController.getLeftY(), 3)
+                        + Math.pow(m_driverController.getLeftY(), 1),
+                    Math.pow(m_driverController.getRightX(), 3)
+                        + Math.pow(m_driverController.getRightX(), 1))));
   }
 
   /**

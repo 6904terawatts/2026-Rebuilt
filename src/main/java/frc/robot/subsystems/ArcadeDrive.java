@@ -53,6 +53,13 @@ public class ArcadeDrive extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+
+  }
+
+  public void arcadeDrive(double fwd, double rot) {
+    leftOut.Output = fwd + rot;
+    rightOut.Output = fwd - rot;
+
     leftLeader.setControl(leftOut);
     rightLeader.setControl(rightOut);
   }
