@@ -63,12 +63,18 @@ public class RobotContainer {
     // cancelling on release.
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
 
-    double fwdSpeed =
-        Math.pow(m_driverController.getLeftY(), 3) + Math.pow(m_driverController.getLeftY(), 1);
-    double rotSpeed =
-        Math.pow(m_driverController.getRightX(), 3) + Math.pow(m_driverController.getRightX(), 1);
-    m_arcadeDrive.setDefaultCommand(m_arcadeDrive.ArcadeDriveCommand(fwdSpeed, rotSpeed));
-
+m_arcadeDrive.setDefaultCommand(
+  m_arcadeDrive.ArcadeDriveCommand(
+    () -> {
+      double y = -m_driverController.getLeftY();
+      return Math.pow(y, 3);  // Cubic for fine control
+    },
+    () -> {
+      double x = m_driverController.getRightX();
+      return Math.pow(x, 3);  // Cubic for fine turning
+    }
+  )
+);
     operatorController.leftBumper().whileTrue(new Intake(fuelSubsystem));
     // While the right bumper on the operator controller is held, spin up for 1
     // second, then launch fuel. When the button is released, stop.
