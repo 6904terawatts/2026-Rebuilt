@@ -10,7 +10,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
+import frc.robot.commands.Eject;
+import frc.robot.commands.Intake;
+import frc.robot.commands.LaunchSequence;
 import frc.robot.subsystems.ArcadeDrive;
+import frc.robot.subsystems.CANFuelSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
 
 /**
@@ -20,6 +24,10 @@ import frc.robot.subsystems.ExampleSubsystem;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+
+  private final ArcadeDrive m_arcadeDrive = new ArcadeDrive();
+  private final CANFuelSubsystem fuelSubsystem = new CANFuelSubsystem();
+
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
@@ -29,10 +37,13 @@ public class RobotContainer {
   private double fwdSpeed = 0;
   private double rotSpeed = 0;
 
-  final ArcadeDrive m_arcadeDrive = new ArcadeDrive();
+  private final CommandXboxController operatorController = new CommandXboxController(
+      2);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
+    
     // Configure the trigger bindings
 
     configureBindings();
@@ -64,6 +75,17 @@ public class RobotContainer {
                         + Math.pow(m_driverController.getLeftY(), 1),
                     Math.pow(m_driverController.getRightX(), 3)
                         + Math.pow(m_driverController.getRightX(), 1))));
+
+
+                        
+    // While the left bumper on operator controller is held, intake Fuel
+    operatorController.leftBumper().whileTrue(new Intake(fuelSubsystem));
+    // While the right bumper on the operator controller is held, spin up for 1
+    // second, then launch fuel. When the button is released, stop.
+    operatorController.rightBumper().whileTrue(new LaunchSequence(fuelSubsystem));
+    // While the A button is held on the operator controller, eject fuel back out
+    // the intake
+    operatorController.a().whileTrue(new Eject(fuelSubsystem));
   }
 
   /**
