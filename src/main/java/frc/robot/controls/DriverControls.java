@@ -106,7 +106,18 @@ public class DriverControls {
 
     // Shooter controls  
     controller.rightBumper().whileTrue(superstructure.shootCommand());
-    controller.leftBumper().whileTrue(superstructure.autoAimCommand());
+    
+    // VISION AIMING - This is the new feature!
+    // Hold left bumper to automatically aim at the hub using vision
+    // The robot will:
+    // 1. Use AprilTags to locate the hub
+    // 2. Calculate the correct turret and hood angles
+    // 3. Adjust shooter speed based on distance
+    // 4. Continuously track the target as you drive
+    controller.leftBumper().whileTrue(
+        superstructure.visionAimAtHubCommand()
+            .withName("Driver.VisionAimAtHub")
+    );
 
     // Position controls
     // controller.a().whileTrue(superstructure.stowCommand());

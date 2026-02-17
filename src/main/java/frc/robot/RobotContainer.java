@@ -32,9 +32,21 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
+  // ============================================================================
+  // SUBSYSTEM INITIALIZATION
+  // ============================================================================
+  
+  // Core subsystems
   private final SwerveSubsystem drivebase = new SwerveSubsystem();
+  
+  // Vision subsystem for AprilTag tracking and pose estimation
+  // This MUST be created before being passed to other subsystems
+  private final VisionSubsystem vision = new VisionSubsystem();
+  
+  // Shooting mechanism subsystems
   private final TurretSubsystem turret = new TurretSubsystem();
   private final ShooterSubsystem shooter = new ShooterSubsystem();
   private final IntakeSubsystem intake = new IntakeSubsystem();
@@ -42,6 +54,7 @@ public class RobotContainer {
   private final KickerSubsystem kicker = new KickerSubsystem();
   private final HoodSubsystem hood = new HoodSubsystem();
 
+  // Superstructure coordinates all shooting mechanisms
   private final Superstructure superstructure = new Superstructure(shooter, turret, hood, intake, hopper, kicker);
 
   private final SendableChooser<Command> autoChooser;
@@ -53,6 +66,23 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, I/O devices, and commands.
    */
   public RobotContainer() {
+    // ========================================================================
+    // VISION INTEGRATION - Wire everything together!
+    // ========================================================================
+    
+    // Connect vision to swerve for pose fusion
+    // This allows the drivetrain to use vision estimates with wheel odometry
+    drivebase.setVisionSubsystem(vision);
+    
+    // Connect vision and swerve to superstructure for vision-based aiming
+    // This allows the shooter to automatically aim using vision
+    superstructure.setVisionSubsystem(vision);
+    superstructure.setSwerveSubsystem(drivebase);
+    
+    // ========================================================================
+    // STANDARD INITIALIZATION
+    // ========================================================================
+    
     // Configure the trigger bindings
     configureBindings();
     buildNamedAutoCommands();
