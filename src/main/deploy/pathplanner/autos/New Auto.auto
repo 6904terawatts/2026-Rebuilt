@@ -7,18 +7,6 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Move to tray"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
             "pathName": "move to hub"
           }
         },
@@ -31,7 +19,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "move to climb"
+            "pathName": "Move to trench"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "mid intake"
           }
         }
       ]

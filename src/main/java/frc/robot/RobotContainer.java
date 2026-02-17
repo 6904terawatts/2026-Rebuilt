@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ControllerConstants;
 import frc.robot.controls.DriverControls;
@@ -40,7 +41,7 @@ public class RobotContainer {
   // ============================================================================
   
   // Core subsystems
-  private final SwerveSubsystem drivebase = new SwerveSubsystem();
+  public final SwerveSubsystem drivebase = new SwerveSubsystem();
   
   // Vision subsystem for AprilTag tracking and pose estimation
   // This MUST be created before being passed to other subsystems
@@ -124,6 +125,14 @@ public class RobotContainer {
     DriverControls.configure(ControllerConstants.kDriverControllerPort, drivebase, superstructure);
     OperatorControls.configure(ControllerConstants.kOperatorControllerPort, drivebase, superstructure);
     PoseControls.configure(ControllerConstants.kPoseControllerPort, drivebase);
+
+
+  
+
+
+
+
+
   }
 
   private void buildNamedAutoCommands() {
@@ -137,6 +146,21 @@ public class RobotContainer {
     NamedCommands.registerCommand("driveForwards",
         drivebase.driveForward().withTimeout(2)
             .withName("Auto.driveForwards"));
+
+
+    NamedCommands.registerCommand("Shoot", 
+   shooter.spinUp().withTimeout(5)
+   .withName("Auto.shoot"));      
+   
+   NamedCommands.registerCommand("Intake",
+    intake.intakeCommand().withTimeout(5)
+    .withName("auto.Intake"));
+
+    // NamedCommands.registerCommand("Climb" ,
+    // climber.climb().withTimeout(1)
+    // .withName("Auto.CLimb"));
+
+
   }
 
   public Command getAutonomousCommand() {

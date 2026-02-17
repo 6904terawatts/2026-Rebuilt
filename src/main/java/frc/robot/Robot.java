@@ -7,6 +7,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.CommandsLogging;
@@ -46,6 +47,16 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+
+    double omegaReps = Units.degreesToRotations(m_robotContainer.drivebase.getTurnRate());
+    var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+
+    if(llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaReps) < 2.0){
+
+
+  m_robotContainer.drivebase.resetPose(llMeasurement.pose);
+
+    }
 
     // Log running commands and subsystem requirements
     CommandsLogging.logRunningCommands();

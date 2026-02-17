@@ -21,8 +21,10 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.VisionSubsystem.VisionMeasurement;
 
@@ -38,8 +40,10 @@ import frc.robot.subsystems.VisionSubsystem.VisionMeasurement;
  * - Smooth, fast updates from wheels (odometry)
  * - Absolute accuracy from vision (corrects drift)
  * - Best of both worlds!
+ * 
+ * IMPORTANT: This extends SubsystemBase so periodic() is called automatically!
  */
-public class SwerveSubsystem {
+public class SwerveSubsystem extends SubsystemBase {
     private final CommandSwerveDrivetrain drivetrain;
     public final Field2d field = new Field2d(); // For field visualization
     
@@ -108,7 +112,7 @@ public class SwerveSubsystem {
                     var alliance = DriverStation.getAlliance();
                     return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
                 },
-                drivetrain                   // Drivetrain subsystem as a requirement
+                this                        // This subsystem as a requirement
             );
         } catch (Exception e) {
             // If PathPlanner config fails, log the error but don't crash
@@ -138,8 +142,41 @@ public class SwerveSubsystem {
      * 2. If yes, add it to the pose estimator
      * 3. The pose estimator fuses it with wheel odometry
      * 4. Result: More accurate robot position!
+     * 
+     * ALSO LOGS: All swerve data for AdvantageScope visualization
      */
+    @Override
     public void periodic() {
+        // ====================================================================
+        // LOG BASIC SWERVE DATA
+        // ====================================================================
+    
+        // Current robot pose (position + rotation)
+        Pose2d currentPose = getPose();
+        Logger.recordOutput("Swerve/Pose", currentPose);
+        Logger.recordOutput("Swerve/Pose3d", getPose3d());
+        
+        // Robot velocities
+        ChassisSpeeds speeds = getChassisSpeeds();
+        Logger.recordOutput("Swerve/VelocityX", speeds.vxMetersPerSecond);
+        Logger.recordOutput("Swerve/VelocityY", speeds.vyMetersPerSecond);
+        Logger.recordOutput("Swerve/VelocityOmega", speeds.omegaRadiansPerSecond);
+        
+        // Robot heading (rotation)
+        Logger.recordOutput("Swerve/Heading", currentPose.getRotation().getDegrees());
+        
+// Module states (for detailed debugging)
+var moduleStates = drivetrain.getState().ModuleStates;
+Logger.recordOutput("Swerve/ModuleStates", moduleStates);
+
+field.setRobotPose(currentPose);
+SmartDashboard.putData(field);
+
+
+        // ====================================================================
+        // VISION FUSION
+        // ====================================================================
+        
         // Only fuse vision data if we have a vision subsystem
         visionSubsystem.ifPresent(vision -> {
             // Get the latest vision measurement
@@ -164,6 +201,8 @@ public class SwerveSubsystem {
                 // Log for debugging in AdvantageScope
                 Logger.recordOutput("Swerve/VisionPoseUsed", visionData.pose);
                 Logger.recordOutput("Swerve/VisionTagCount", visionData.tagCount);
+                Logger.recordOutput("Swerve/VisionStdDevXY", visionStdDevs.get(0, 0));
+                Logger.recordOutput("Swerve/VisionStdDevTheta", visionStdDevs.get(2, 0));
             });
         });
     }
@@ -211,40 +250,14 @@ public class SwerveSubsystem {
     }
     
     /**
-     * Configure PathPlanner for auto
-     */
-    // private void configurePathPlanner() {
-    //     try {
-    //         RobotConfig config = RobotConfig.fromGUISettings();
-            
-    //         AutoBuilder.configure(
-    //             this::getPose,
-    //             this::resetPose,
-    //             this::getChassisSpeeds,
-    //             this::setChassisSpeeds,
-    //             new PPHolonomicDriveController(
-    //                 config.robotConfig.translationConstants,
-    //                 config.robotConfig.rotationConstants
-    //             ),
-    //             config,
-    //             () -> {
-    //                 var alliance = DriverStation.getAlliance();
-    //                 return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
-    //             },
-    //             drivetrain
-    //         );
-    //     } catch (Exception e) {
-    //         DriverStation.reportError("Failed to configure PathPlanner: " + e.getMessage(), e.getStackTrace());
-    //     }
-    // }
-    
-    /**
      * Get current robot pose
      */
     public Pose2d getPose() {
         return drivetrain.getState().Pose;
     }
-    
+
+
+   
     /**
      * Get current robot pose in 3D
      */
@@ -281,6 +294,10 @@ public class SwerveSubsystem {
             .withVelocityY(speeds.vyMetersPerSecond)
             .withRotationalRate(speeds.omegaRadiansPerSecond));
     }
+
+     public double getTurnRate() {
+    return Math.toDegrees(getChassisSpeeds().omegaRadiansPerSecond);
+}
     
     /**
      * Command to drive with joystick inputs (field-centric)
@@ -290,6 +307,8 @@ public class SwerveSubsystem {
         java.util.function.DoubleSupplier translationY,
         java.util.function.DoubleSupplier rotation) {
         
+
+            
         return Commands.run(() -> {
             double xSpeed = translationX.getAsDouble() * MAX_SPEED;
             double ySpeed = translationY.getAsDouble() * MAX_SPEED;
@@ -349,13 +368,5 @@ public class SwerveSubsystem {
      */
     public CommandSwerveDrivetrain getDrivetrain() {
         return drivetrain;
-    }
-    
-    /**
-     * Compatibility class for constants
-     */
-    private static class Constants {
-        public static final double MAX_SPEED = SwerveSubsystem.MAX_SPEED;
-        public static final double MAX_ANGULAR_RATE = SwerveSubsystem.MAX_ANGULAR_RATE;
     }
 }

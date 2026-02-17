@@ -14,8 +14,10 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.ControllerConstants;
+import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Superstructure;
@@ -101,7 +103,8 @@ public class DriverControls {
     }
 
     // Intake controls
-    controller.rightTrigger().whileTrue(superstructure.intakeCommand());
+   // controller.rightTrigger().whileTrue(superstructure.intakeCommand()); TODO: check if we need this
+
     controller.leftTrigger().whileTrue(superstructure.ejectCommand());
 
     // Shooter controls  
@@ -118,6 +121,27 @@ public class DriverControls {
         superstructure.visionAimAtHubCommand()
             .withName("Driver.VisionAimAtHub")
     );
+
+
+  
+  // While right bumper held, drive toward target using Limelight TX/TY offsets
+    // TX = horizontal angle to target (positive = target is to the right)
+    // TY = vertical angle to target (positive = target is above crosshair)
+    SwerveRequest.RobotCentric limelightDrive = new SwerveRequest.RobotCentric();
+
+    controller.rightBumper().whileTrue(
+        Commands.run(() ->
+            drivetrain.getDrivetrain().setControl(
+                limelightDrive
+                    .withVelocityX(frc.robot.LimelightHelpers.getTY("limelight") * 0.1)  // forward/back based on vertical offset
+                    .withVelocityY(-frc.robot.LimelightHelpers.getTX("limelight") * 0.05) // strafe based on horizontal offset
+                    .withRotationalRate(0)
+            ),
+            drivetrain.getDrivetrain()
+        ).withName("Drive.LimelightTrack")
+    );
+
+
 
     // Position controls
     // controller.a().whileTrue(superstructure.stowCommand());
