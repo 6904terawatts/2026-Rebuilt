@@ -99,7 +99,7 @@ public class ShootOnTheMoveCommand extends Command {
         // The drivetrain currently does not expose a field-relative chassis speed accessor,
         // so fall back to assuming zero field velocity (no correction). Replace this with
         // a real call to obtain chassis speeds when your SwerveSubsystem provides it.
-        var updatedPosition = new ChassisSpeeds(0.0, 0.0, 0.0);
+        var updatedPosition = drivetrain.getChassisSpeeds();
         var correctiveVector = new Translation2d(updatedPosition.vxMetersPerSecond * timeOfFlight,
             updatedPosition.vyMetersPerSecond * timeOfFlight).unaryMinus();
         var correctiveVector3d = new Translation3d(correctiveVector.getX(), correctiveVector.getY(), 0);

@@ -50,11 +50,11 @@ public class ShooterSubsystem extends SubsystemBase {
   private final SparkFlex leaderSpark = new SparkFlex(Constants.ShooterConstants.kLeaderMotorId,
       MotorType.kBrushless);
 
-  private final SparkFlex followerSpark = new SparkFlex(Constants.ShooterConstants.kFollowerMotorId,
-      MotorType.kBrushless);
+  // private final SparkFlex followerSpark = new SparkFlex(Constants.ShooterConstants.kFollowerMotorId,
+  //     MotorType.kBrushless);
 
   private final SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
-      .withFollowers(Pair.of(followerSpark, true))
+      //.withFollowers(Pair.of(followerSpark, true))
       .withControlMode(ControlMode.CLOSED_LOOP)
       .withClosedLoopController(0.00936, 0, 0)
       .withFeedforward(new SimpleMotorFeedforward(0.191, 0.11858, 0.0))
@@ -64,7 +64,7 @@ public class ShooterSubsystem extends SubsystemBase {
       .withIdleMode(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40));
 
-  private final SmartMotorController smc = new SparkWrapper(leaderSpark, DCMotor.getNeoVortex(2), smcConfig);
+private final SmartMotorController smc = new SparkWrapper(leaderSpark, DCMotor.getNeoVortex(1), smcConfig);
 
   private final FlyWheelConfig shooterConfig = new FlyWheelConfig(smc)
       .withDiameter(Inches.of(4))
@@ -143,7 +143,7 @@ public class ShooterSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     Logger.recordOutput("Shooter/LeaderVelocity", leaderSpark.getEncoder().getVelocity());
-    Logger.recordOutput("Shooter/FollowerVelocity", followerSpark.getEncoder().getVelocity());
+    //Logger.recordOutput("Shooter/FollowerVelocity", followerSpark.getEncoder().getVelocity());
   }
 
   @Override

@@ -22,6 +22,7 @@ import frc.robot.Robot;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.SwerveSubsystem;
+import static edu.wpi.first.units.Units.Degrees;
 import frc.robot.util.maplesim.RebuiltFuelOnFly;
 
 public class DriverControls {
@@ -43,14 +44,26 @@ public class DriverControls {
     // Get max speeds from TunerConstants
     double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     double maxAngularRate = Math.PI * 2; // 2 rotations per second
+
+
+    
     
     // Create swerve request for field-centric drive
     // Configure field-centric request (avoid DriveRequestType API mismatch)
     SwerveRequest.FieldCentric fieldCentric = new SwerveRequest.FieldCentric()
         .withDeadband(maxSpeed * ControllerConstants.DEADBAND)
         .withRotationalDeadband(maxAngularRate * ControllerConstants.DEADBAND);
-    // Set default drive command with speed scaling (0.25 = 25% speed)
-    double speedScale = 0.25; // TODO: Tune speed scaling
+     // Set default drive command with speed scaling
+
+
+    double speedScale = 0.50; // Full speed (was 0.25 - too slow!)
+    
+    // Helper method to apply deadband to controller inputs
+    java.util.function.DoubleSupplier applyDeadband = () -> {
+        double value = controller.getRightX();
+        return Math.abs(value) < ControllerConstants.DEADBAND ? 0.1 : value;
+    };
+    
     
     drivetrain.getDrivetrain().setDefaultCommand(
         drivetrain.getDrivetrain().applyRequest(() -> 
@@ -103,12 +116,12 @@ public class DriverControls {
     }
 
     // Intake controls
-   // controller.rightTrigger().whileTrue(superstructure.intakeCommand()); TODO: check if we need this
+   controller.rightTrigger().whileTrue(superstructure.intakeCommand()); //TODO: check if we need this
 
     controller.leftTrigger().whileTrue(superstructure.ejectCommand());
 
     // Shooter controls  
-    controller.rightBumper().whileTrue(superstructure.shootCommand());
+    // controller.rightBumper().whileTrue(superstructure.shootCommand());
     
     // VISION AIMING - This is the new feature!
     // Hold left bumper to automatically aim at the hub using vision
@@ -148,8 +161,27 @@ public class DriverControls {
     // controller.b().whileTrue(superstructure.scoreLowCommand());
     // controller.y().whileTrue(superstructure.scoreHighCommand());
 
+
+
+
     // Manual turret control
     controller.povUp().whileTrue(superstructure.turretManualCommand(0.2));
     controller.povDown().whileTrue(superstructure.turretManualCommand(-0.2));
+
+// Add to DriverControls.java after line 122:
+
+// A Button - Deploy intake (no rollers)
+controller.a().onTrue(
+    superstructure.setIntakePivotAngle(Degrees.of(0))
+        .withName("Driver.IntakeDown")
+);
+
+// B Button - Stow intake
+controller.b().onTrue(
+    superstructure.setIntakePivotAngle(Degrees.of(46))
+        .withName("Driver.IntakeUp")
+);
+
+
   }
 }
