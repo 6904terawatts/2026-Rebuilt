@@ -172,13 +172,13 @@ public class DriverControls {
 
 // A Button - Deploy intake (no rollers)
 controller.a().onTrue(
-    superstructure.setIntakePivotAngle(Degrees.of(0))
+    superstructure.setIntakePivotAngle(Degrees.of(-46))
         .withName("Driver.IntakeDown")
 );
 
 // B Button - Stow intake
 controller.b().onTrue(
-    superstructure.setIntakePivotAngle(Degrees.of(46))
+    superstructure.setIntakePivotAngle(Degrees.of(0))
         .withName("Driver.IntakeUp")
 );
 

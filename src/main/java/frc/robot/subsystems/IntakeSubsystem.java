@@ -43,7 +43,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.OPEN_LOOP)
       .withTelemetry("IntakeRollerMotor", TelemetryVerbosity.HIGH)
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(1))) // Direct drive, adjust if geared
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3))) // 3:1 Direct drive, adjust if geared
       .withMotorInverted(true)
       .withIdleMode(MotorMode.COAST)
       .withStatorCurrentLimit(Amps.of(40));
@@ -109,7 +109,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command setPivotAngle(Angle angle) {
-    return intakePivot.setAngle(angle).withName("IntakePivot.SetAngle");
+   return Commands.runOnce(() -> intakePivot.setAngle(angle).schedule(), this);
   }
 
   public Command rezero() {

@@ -24,6 +24,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import yams.gearing.GearBox;
@@ -99,7 +100,9 @@ private final SmartMotorController smc = new SparkWrapper(leaderSpark, DCMotor.g
   }
 
   public Command spinUp() {
-    return setSpeed(RPM.of(5500));
+    return Commands.run(() -> {
+        shooter.setSpeed(RPM.of(5500)).schedule();
+    }, this).withName("Shooter.SpinUp"); 
 
     // return setSpeed(RotationsPerSecond.of(50));
 

@@ -36,7 +36,7 @@ public class VisionSubsystem extends SubsystemBase {
   // ============================================================================
   
   // Name of the Limelight (must match what's configured in the Limelight web interface)
-  private static final String LIMELIGHT_NAME = "limelight";
+  private static final String LIMELIGHT_NAME = "TurretAim";
   
   // Physical offset of the camera from the robot's center
   // These values define WHERE the camera is mounted on the robot

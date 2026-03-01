@@ -55,18 +55,18 @@ public class HopperSubsystem extends SubsystemBase {
    * Command to run the hopper forward while held.
    */
   public Command feedCommand() {
-    return hopper.set(HOPPER_SPEED).finallyDo(() -> smc.setDutyCycle(0)).withName("Hopper.Feed");
+    return hopper.set(-HOPPER_SPEED).finallyDo(() -> smc.setDutyCycle(0)).withName("Hopper.Feed");
   }
 
   public Command backFeedCommand() {
-    return hopper.set(-HOPPER_SPEED).finallyDo(() -> smc.setDutyCycle(0)).withName("Hopper.BackFeed");
+    return hopper.set(HOPPER_SPEED).finallyDo(() -> smc.setDutyCycle(0)).withName("Hopper.BackFeed");
   }
 
   /**
    * Command to run the hopper in reverse while held.
    */
   public Command reverseCommand() {
-    return hopper.set(-HOPPER_SPEED).finallyDo(() -> smc.setDutyCycle(0)).withName("Hopper.Reverse");
+    return hopper.set(HOPPER_SPEED).finallyDo(() -> smc.setDutyCycle(0)).withName("Hopper.Reverse");
   }
 
   /**
