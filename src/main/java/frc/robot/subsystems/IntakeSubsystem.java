@@ -109,7 +109,9 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command setPivotAngle(Angle angle) {
-   return Commands.runOnce(() -> intakePivot.setAngle(angle).schedule(), this);
+     return Commands.runOnce(() -> {
+        intakePivotController.setPosition(angle);
+    }, this).withName("IntakePivot.SetAngle");
   }
 
   public Command rezero() {

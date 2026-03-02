@@ -24,7 +24,7 @@ import yams.motorcontrollers.local.SparkWrapper;
 
 public class KickerSubsystem extends SubsystemBase {
 
-  private static final double KICKER_SPEED = 1.0;
+  private static final double KICKER_SPEED = 1.3;
 
   // SparkFlex motor controller with NEO Vortex motor
   private SparkFlex kickerSpark = new SparkFlex(Constants.KickerConstants.kKickerMotorId, MotorType.kBrushless);
@@ -32,7 +32,7 @@ public class KickerSubsystem extends SubsystemBase {
   private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.OPEN_LOOP)
       .withTelemetry("KickerMotor", TelemetryVerbosity.HIGH)
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(5))) // 5:1 gear reduction
+      .withGearing(new MechanismGearing(GearBox.fromReductionStages(3))) // 3:1 gear reduction
       .withMotorInverted(true)
       .withIdleMode(MotorMode.BRAKE)
       .withStatorCurrentLimit(Amps.of(20));

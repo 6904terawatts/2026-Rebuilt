@@ -117,9 +117,7 @@ public class DriverControls {
 
     // Intake controls
    controller.rightTrigger().whileTrue(superstructure.intakeCommand()); //TODO: check if we need this
-
     controller.leftTrigger().whileTrue(superstructure.ejectCommand());
-
     // Shooter controls  
     // controller.rightBumper().whileTrue(superstructure.shootCommand());
     
@@ -134,14 +132,10 @@ public class DriverControls {
         superstructure.visionAimAtHubCommand()
             .withName("Driver.VisionAimAtHub")
     );
-
-
-  
   // While right bumper held, drive toward target using Limelight TX/TY offsets
     // TX = horizontal angle to target (positive = target is to the right)
     // TY = vertical angle to target (positive = target is above crosshair)
     SwerveRequest.RobotCentric limelightDrive = new SwerveRequest.RobotCentric();
-
     controller.rightBumper().whileTrue(
         Commands.run(() ->
             drivetrain.getDrivetrain().setControl(
@@ -168,18 +162,21 @@ public class DriverControls {
     controller.povUp().whileTrue(superstructure.turretManualCommand(0.2));
     controller.povDown().whileTrue(superstructure.turretManualCommand(-0.2));
 
+
+    controller.a().onTrue(superstructure.setIntakePivotAngle(Degrees.of(0)).withName("Driver.IntakeUp"));
+    controller.b().onTrue(superstructure.setIntakePivotAngle(Degrees.of(148)).withName("Driver.IntakeDown"));
+
 // Add to DriverControls.java after line 122:
 
 // A Button - Deploy intake (no rollers)
 controller.a().onTrue(
-    superstructure.setIntakePivotAngle(Degrees.of(-46))
-        .withName("Driver.IntakeDown")
-);
-
-// B Button - Stow intake
-controller.b().onTrue(
     superstructure.setIntakePivotAngle(Degrees.of(0))
         .withName("Driver.IntakeUp")
+);
+
+controller.b().onTrue(
+    superstructure.setIntakePivotAngle(Degrees.of(148))
+        .withName("Driver.IntakeDown")
 );
 
 
