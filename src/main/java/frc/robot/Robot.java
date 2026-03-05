@@ -21,6 +21,8 @@ public class Robot extends LoggedRobot {
   private SimulatedArena arena;
 
   public Robot() {
+
+    
     Logger.recordMetadata("ProjectName", "CA_Ri3D_2026"); // Set a metadata value
 
     Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
@@ -90,6 +92,8 @@ public class Robot extends LoggedRobot {
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
+    // m_robotContainer.rezeroIntake().schedule();
+      
     }
   }
 
@@ -111,6 +115,8 @@ public class Robot extends LoggedRobot {
   @Override
   public void testInit() {
     CommandScheduler.getInstance().cancelAll();
+
+        // m_robotContainer.rezeroIntake().schedule();
   }
 
   @Override

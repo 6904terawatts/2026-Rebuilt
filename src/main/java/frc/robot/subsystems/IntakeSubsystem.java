@@ -62,7 +62,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // 5:1, 5:1, 60/18 reduction
   private SmartMotorControllerConfig intakePivotSmartMotorConfig = new SmartMotorControllerConfig(this)
       .withControlMode(ControlMode.CLOSED_LOOP)
-      .withClosedLoopController(25, 0, 0, DegreesPerSecond.of(360), DegreesPerSecondPerSecond.of(360))
+     .withClosedLoopController(25, 0, 0, DegreesPerSecond.of(720), DegreesPerSecondPerSecond.of(720))  
       .withFeedforward(new SimpleMotorFeedforward(0, 10, 0))
       .withTelemetry("IntakePivotMotor", TelemetryVerbosity.HIGH)
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 5, 60.0 / 18.0)))
@@ -72,7 +72,7 @@ public class IntakeSubsystem extends SubsystemBase {
       .withIdleMode(MotorMode.COAST)
       .withSoftLimit(Degrees.of(0), Degrees.of(150))
       .withStatorCurrentLimit(Amps.of(10))
-      .withClosedLoopRampRate(Seconds.of(0.1))
+      .withClosedLoopRampRate(Seconds.of(0.05))
       .withOpenLoopRampRate(Seconds.of(0.1));
 
   private SparkFlex pivotMotor = new SparkFlex(Constants.IntakeConstants.kPivotMotorId, MotorType.kBrushless);

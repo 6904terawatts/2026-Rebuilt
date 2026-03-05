@@ -67,6 +67,8 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, I/O devices, and commands.
    */
   public RobotContainer() {
+
+    
     // ========================================================================
     // VISION INTEGRATION - Wire everything together!
     // ========================================================================
@@ -87,6 +89,8 @@ public class RobotContainer {
     // Configure the trigger bindings
     configureBindings();
     buildNamedAutoCommands();
+
+    
 
     // Initialize alliance (default to red if not present)
     onAllianceChanged(getAlliance());
@@ -257,4 +261,7 @@ public class RobotContainer {
 
     System.out.println("Alliance changed to: " + alliance);
   }
+
+
+  
 }

@@ -1,3 +1,6 @@
+
+
+
 package frc.robot.controls;
 
 import org.ironmaple.simulation.SimulatedArena;
@@ -6,11 +9,13 @@ import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Degrees;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -22,10 +27,17 @@ import frc.robot.Robot;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.SwerveSubsystem;
-import static edu.wpi.first.units.Units.Degrees;
 import frc.robot.util.maplesim.RebuiltFuelOnFly;
 
 public class DriverControls {
+
+  // Speed mode multipliers
+  private static final double SLOW_MODE_SCALE = 0.3;    // 30% - precision
+  private static final double NORMAL_MODE_SCALE = 0.6;  // 60% - default
+  private static final double TURBO_MODE_SCALE = 1.0;   // 100% - max speed
+  
+  // Exponential curve for smoother control
+  private static final double STICK_EXPONENT = 2.0;
 
   private static Pose2d getTargetPose() {
     Pose2d hubPose = new Pose2d(
@@ -34,7 +46,6 @@ public class DriverControls {
         Rotation2d.kZero);
 
     Logger.recordOutput("DriverControls/TargetHubPose", hubPose);
-
     return hubPose;
   }
 
@@ -44,40 +55,60 @@ public class DriverControls {
     // Get max speeds from TunerConstants
     double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     double maxAngularRate = Math.PI * 2; // 2 rotations per second
-
-
     
+    // Speed mode tracker (starts in normal mode)
+    final double[] currentSpeedScale = {NORMAL_MODE_SCALE};
     
     // Create swerve request for field-centric drive
-    // Configure field-centric request (avoid DriveRequestType API mismatch)
     SwerveRequest.FieldCentric fieldCentric = new SwerveRequest.FieldCentric()
         .withDeadband(maxSpeed * ControllerConstants.DEADBAND)
         .withRotationalDeadband(maxAngularRate * ControllerConstants.DEADBAND);
-     // Set default drive command with speed scaling
-
-
-    double speedScale = 0.50; // Full speed (was 0.25 - too slow!)
     
-    // Helper method to apply deadband to controller inputs
-    java.util.function.DoubleSupplier applyDeadband = () -> {
-        double value = controller.getRightX();
-        return Math.abs(value) < ControllerConstants.DEADBAND ? 0.1 : value;
-    };
-    
+    // ============================================================================
+    // DEFAULT DRIVE COMMAND - Smooth with exponential curve
+    // ============================================================================
     
     drivetrain.getDrivetrain().setDefaultCommand(
-        drivetrain.getDrivetrain().applyRequest(() -> 
-            fieldCentric
-                .withVelocityX(-controller.getLeftY() * maxSpeed * speedScale)
-                .withVelocityY(-controller.getLeftX() * maxSpeed * speedScale)
-                .withRotationalRate(-controller.getRightX() * maxAngularRate * speedScale)
-        ).withName("Drive.FieldCentric")
+        drivetrain.getDrivetrain().applyRequest(() -> {
+            // Get raw stick inputs
+            double rawLeftY = -controller.getLeftY();
+            double rawLeftX = -controller.getLeftX();
+            double rawRightX = -controller.getRightX();
+            
+            // Apply deadband
+            rawLeftY = MathUtil.applyDeadband(rawLeftY, ControllerConstants.DEADBAND);
+            rawLeftX = MathUtil.applyDeadband(rawLeftX, ControllerConstants.DEADBAND);
+            rawRightX = MathUtil.applyDeadband(rawRightX, ControllerConstants.DEADBAND);
+            
+            // Apply exponential curve for smoother control
+            double smoothLeftY = applyExponentialCurve(rawLeftY);
+            double smoothLeftX = applyExponentialCurve(rawLeftX);
+            double smoothRightX = applyExponentialCurve(rawRightX);
+            
+            // Apply speed scaling
+            double vx = smoothLeftY * maxSpeed * currentSpeedScale[0];
+            double vy = smoothLeftX * maxSpeed * currentSpeedScale[0];
+            double omega = smoothRightX * maxAngularRate * currentSpeedScale[0];
+            
+            // Log current speed mode
+            Logger.recordOutput("Drive/SpeedMode", 
+                currentSpeedScale[0] == SLOW_MODE_SCALE ? "SLOW" :
+                currentSpeedScale[0] == TURBO_MODE_SCALE ? "TURBO" : "NORMAL");
+            
+            return fieldCentric
+                .withVelocityX(vx)
+                .withVelocityY(vy)
+                .withRotationalRate(omega);
+        }).withName("Drive.FieldCentric")
     );
 
+    // ============================================================================
+    // TEST MODE CONTROLS
+    // ============================================================================
+    
     if (DriverStation.isTest()) {
       // Test mode controls
       controller.b().whileTrue(Commands.runOnce(() -> {
-        // Center modules command equivalent
         drivetrain.getDrivetrain().setControl(new SwerveRequest.Idle());
       }, drivetrain.getDrivetrain()));
       
@@ -87,98 +118,105 @@ public class DriverControls {
       
       controller.y().onTrue(drivetrain.zeroGyro());
 
-      // SysId commands
       controller.start().whileTrue(drivetrain.getDrivetrain().sysIdDynamic(
           edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward));
       controller.back().whileTrue(drivetrain.getDrivetrain().sysIdQuasistatic(
           edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction.kForward));
-          
-    // } else if (Robot.isSimulation()) {
-    //   // Fire fuel 10 times per second while button is held
-    //   controller.back().whileTrue(
-    //       Commands.run(() -> {
-    //         Pose3d shooterPosition = new Pose3d();
-    //         try {
-    //           shooterPosition = superstructure.getShooterPose();
-    //         } catch (Exception e) {
-    //           // If shooter pose not available, use robot pose
-    //           shooterPosition = drivetrain.getPose3d();
-    //         }
-
-    //         GamePieceProjectile projectile = new RebuiltFuelOnFly(
-    //             "Fuel-Test",
-    //             shooterPosition,
-    //             superstructure.getShooterLinearVelocity());
-
-    //         SimulatedArena.getInstance().addGamePiece(projectile);
-    //       })
-    //           .withName("Test.ShootFuel"));
     }
 
-    // Intake controls
-   controller.rightTrigger().whileTrue(superstructure.intakeCommand()); //TODO: check if we need this
-    controller.leftTrigger().whileTrue(superstructure.ejectCommand());
-    // Shooter controls  
-    // controller.rightBumper().whileTrue(superstructure.shootCommand());
+    // ============================================================================
+    // SPEED MODES (Left/Right Bumper)
+    // ============================================================================
     
-    // VISION AIMING - This is the new feature!
-    // Hold left bumper to automatically aim at the hub using vision
-    // The robot will:
-    // 1. Use AprilTags to locate the hub
-    // 2. Calculate the correct turret and hood angles
-    // 3. Adjust shooter speed based on distance
-    // 4. Continuously track the target as you drive
-    controller.leftBumper().whileTrue(
+    // Left Bumper = SLOW MODE (hold for precision)
+    controller.leftBumper()
+        .whileTrue(Commands.runOnce(() -> currentSpeedScale[0] = SLOW_MODE_SCALE))
+        .onFalse(Commands.runOnce(() -> currentSpeedScale[0] = NORMAL_MODE_SCALE));
+    
+    // Right Bumper = TURBO MODE (hold for max speed)
+    controller.rightBumper()
+        .whileTrue(Commands.runOnce(() -> currentSpeedScale[0] = TURBO_MODE_SCALE))
+        .onFalse(Commands.runOnce(() -> currentSpeedScale[0] = NORMAL_MODE_SCALE));
+    
+    // ============================================================================
+    // INTAKE CONTROLS (A/B Buttons)
+    // ============================================================================
+    
+    // A Button - Intake UP (stow)
+    controller.a().onTrue(
+        superstructure.setIntakePivotAngle(Degrees.of(-48))
+            .withName("Driver.IntakeUp")
+    );
+    
+    // B Button - Intake DOWN (deploy)
+    controller.b().onTrue(
+        superstructure.setIntakePivotAngle(Degrees.of(98))
+            .withName("Driver.IntakeDown")
+    );
+    
+    // ============================================================================
+    // VISION & LIMELIGHT (Back/X/Y)
+    // ============================================================================
+    
+    // Back Button - Vision Aim at Hub
+    controller.back().whileTrue(
         superstructure.visionAimAtHubCommand()
             .withName("Driver.VisionAimAtHub")
     );
-  // While right bumper held, drive toward target using Limelight TX/TY offsets
-    // TX = horizontal angle to target (positive = target is to the right)
-    // TY = vertical angle to target (positive = target is above crosshair)
+    
+    // X Button - Limelight Tracking Drive (drive toward AprilTag)
     SwerveRequest.RobotCentric limelightDrive = new SwerveRequest.RobotCentric();
-    controller.rightBumper().whileTrue(
+    controller.x().whileTrue(
         Commands.run(() ->
             drivetrain.getDrivetrain().setControl(
                 limelightDrive
-                    .withVelocityX(frc.robot.LimelightHelpers.getTY("limelight") * 0.1)  // forward/back based on vertical offset
-                    .withVelocityY(-frc.robot.LimelightHelpers.getTX("limelight") * 0.05) // strafe based on horizontal offset
+                    .withVelocityX(LimelightHelpers.getTY("limelight") * 0.1)
+                    .withVelocityY(-LimelightHelpers.getTX("limelight") * 0.05)
                     .withRotationalRate(0)
             ),
             drivetrain.getDrivetrain()
         ).withName("Drive.LimelightTrack")
     );
-
-
-
-    // Position controls
-    // controller.a().whileTrue(superstructure.stowCommand());
-    // controller.b().whileTrue(superstructure.scoreLowCommand());
-    // controller.y().whileTrue(superstructure.scoreHighCommand());
-
-
-
-
-    // Manual turret control
+    
+    // Y Button - Reset Gyro
+    controller.y().onTrue(drivetrain.zeroGyro());
+    
+    // ============================================================================
+    // TRIGGERS (Intake/Eject)
+    // ============================================================================
+    
+    controller.rightTrigger().whileTrue(superstructure.intakeCommand());
+    controller.leftTrigger().whileTrue(superstructure.ejectCommand());
+    
+    // ============================================================================
+    // D-PAD (Manual Turret Control)
+    // ============================================================================
+    
     controller.povUp().whileTrue(superstructure.turretManualCommand(0.2));
     controller.povDown().whileTrue(superstructure.turretManualCommand(-0.2));
-
-
-    controller.a().onTrue(superstructure.setIntakePivotAngle(Degrees.of(0)).withName("Driver.IntakeUp"));
-    controller.b().onTrue(superstructure.setIntakePivotAngle(Degrees.of(148)).withName("Driver.IntakeDown"));
-
-// Add to DriverControls.java after line 122:
-
-// A Button - Deploy intake (no rollers)
-controller.a().onTrue(
-    superstructure.setIntakePivotAngle(Degrees.of(0))
-        .withName("Driver.IntakeUp")
-);
-
-controller.b().onTrue(
-    superstructure.setIntakePivotAngle(Degrees.of(148))
-        .withName("Driver.IntakeDown")
-);
-
-
+    
+    // ============================================================================
+    // START BUTTON (Lock Wheels)
+    // ============================================================================
+    
+    controller.start().whileTrue(
+        Commands.run(() -> 
+            drivetrain.getDrivetrain().setControl(new SwerveRequest.SwerveDriveBrake()),
+            drivetrain.getDrivetrain()
+        ).withName("Drive.LockWheels")
+    );
+  }
+  
+  // ============================================================================
+  // HELPER METHODS
+  // ============================================================================
+  
+  /**
+   * Apply exponential curve to joystick input for smoother control.
+   * Small movements = very small output (precise)
+   * Large movements = proportional output (responsive)
+   */
+  private static double applyExponentialCurve(double input) {
+      return Math.copySign(Math.pow(Math.abs(input), STICK_EXPONENT), input);
   }
 }
