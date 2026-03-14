@@ -17,6 +17,7 @@ import static edu.wpi.first.units.Units.Meter;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Degrees;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -37,7 +38,7 @@ public class DriverControls {
   private static final double TURBO_MODE_SCALE = 1.0;   // 100% - max speed
   
   // Exponential curve for smoother control
-  private static final double STICK_EXPONENT = 2.0;
+  private static final double STICK_EXPONENT = 1.6;
 
   private static Pose2d getTargetPose() {
     Pose2d hubPose = new Pose2d(
@@ -71,8 +72,8 @@ public class DriverControls {
     drivetrain.getDrivetrain().setDefaultCommand(
         drivetrain.getDrivetrain().applyRequest(() -> {
             // Get raw stick inputs
-            double rawLeftY = -controller.getLeftY();
-            double rawLeftX = -controller.getLeftX();
+            double rawLeftY = controller.getLeftY();
+            double rawLeftX = controller.getLeftX();
             double rawRightX = -controller.getRightX();
             
             // Apply deadband
@@ -144,22 +145,23 @@ public class DriverControls {
     
     // A Button - Intake UP (stow)
     controller.a().onTrue(
-        superstructure.setIntakePivotAngle(Degrees.of(-48))
+        superstructure.setIntakePivotAngle(Degrees.of(-144))
             .withName("Driver.IntakeUp")
     );
     
     // B Button - Intake DOWN (deploy)
     controller.b().onTrue(
-        superstructure.setIntakePivotAngle(Degrees.of(98))
+        superstructure.setIntakePivotAngle(Degrees.of(0))
             .withName("Driver.IntakeDown")
     );
+   
     
     // ============================================================================
     // VISION & LIMELIGHT (Back/X/Y)
     // ============================================================================
     
     // Back Button - Vision Aim at Hub
-    controller.back().whileTrue(
+    controller.rightTrigger().whileTrue(
         superstructure.visionAimAtHubCommand()
             .withName("Driver.VisionAimAtHub")
     );
@@ -185,8 +187,8 @@ public class DriverControls {
     // TRIGGERS (Intake/Eject)
     // ============================================================================
     
-    controller.rightTrigger().whileTrue(superstructure.intakeCommand());
-    controller.leftTrigger().whileTrue(superstructure.ejectCommand());
+    // controller.rightTrigger().whileTrue(superstructure.intakeCommand());
+    // controller.leftTrigger().whileTrue(superstructure.ejectCommand());
     
     // ============================================================================
     // D-PAD (Manual Turret Control)

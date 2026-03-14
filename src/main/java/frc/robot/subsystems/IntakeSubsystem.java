@@ -16,6 +16,7 @@ import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Seconds;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -35,7 +36,7 @@ import yams.motorcontrollers.local.SparkWrapper;
 
 public class IntakeSubsystem extends SubsystemBase {
 
-  private static final double INTAKE_SPEED = 1.0;
+  private static final double INTAKE_SPEED = 1.3;
 
   // SparkFlex controlling the intake roller
   private SparkFlex rollerSpark = new SparkFlex(Constants.IntakeConstants.kRollerMotorId, MotorType.kBrushless);
@@ -46,7 +47,7 @@ public class IntakeSubsystem extends SubsystemBase {
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(3))) // 3:1 Direct drive, adjust if geared
       .withMotorInverted(true)
       .withIdleMode(MotorMode.COAST)
-      .withStatorCurrentLimit(Amps.of(40));
+      .withStatorCurrentLimit(Amps.of(30));
 
   private SmartMotorController smc = new SparkWrapper(rollerSpark, DCMotor.getNeoVortex(1), smcConfig);
 
@@ -56,42 +57,74 @@ public class IntakeSubsystem extends SubsystemBase {
       .withUpperSoftLimit(RPM.of(6000))
       .withLowerSoftLimit(RPM.of(-6000))
       .withTelemetry("IntakeRoller", TelemetryVerbosity.HIGH);
-
   private FlyWheel intake = new FlyWheel(intakeConfig);
 
   // 5:1, 5:1, 60/18 reduction
   private SmartMotorControllerConfig intakePivotSmartMotorConfig = new SmartMotorControllerConfig(this)
-      .withControlMode(ControlMode.CLOSED_LOOP)
-     .withClosedLoopController(25, 0, 0, DegreesPerSecond.of(720), DegreesPerSecondPerSecond.of(720))  
-      .withFeedforward(new SimpleMotorFeedforward(0, 10, 0))
-      .withTelemetry("IntakePivotMotor", TelemetryVerbosity.HIGH)
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 5, 60.0 / 18.0)))
-      // .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 5, 60.0 /
-      // 18.0, 42)))
-      .withMotorInverted(false)
-      .withIdleMode(MotorMode.COAST)
-      .withSoftLimit(Degrees.of(0), Degrees.of(150))
-      .withStatorCurrentLimit(Amps.of(10))
-      .withClosedLoopRampRate(Seconds.of(0.05))
-      .withOpenLoopRampRate(Seconds.of(0.1));
-
+    .withControlMode(ControlMode.CLOSED_LOOP)
+    .withClosedLoopController(
+        12.0,                                    // P (was 25)
+        0.0,                                     // I
+        0.15,                                    // D (added)
+        DegreesPerSecond.of(720),                // 2× velocity
+        DegreesPerSecondPerSecond.of(1080))      // 3× acceleration
+    .withFeedforward(new SimpleMotorFeedforward(0, 10, 0))
+    .withTelemetry("IntakePivotMotor", TelemetryVerbosity.HIGH)
+    .withGearing(new MechanismGearing(GearBox.fromReductionStages(5, 5, 60.0 / 18.0)))
+    .withMotorInverted(false)
+    .withIdleMode(MotorMode.COAST)
+    .withStatorCurrentLimit(Amps.of(15))
+    .withClosedLoopRampRate(Seconds.of(0.1))
+    .withOpenLoopRampRate(Seconds.of(0.1));
+    
   private SparkFlex pivotMotor = new SparkFlex(Constants.IntakeConstants.kPivotMotorId, MotorType.kBrushless);
 
-  private SmartMotorController intakePivotController = new SparkWrapper(pivotMotor, DCMotor.getNeoVortex(1),
-      intakePivotSmartMotorConfig);
+  private SmartMotorController intakePivotController;  // Initialize in constructor
 
-  private final ArmConfig intakePivotConfig = new ArmConfig(intakePivotController)
-      .withSoftLimits(Degrees.of(0), Degrees.of(150))
-      .withHardLimit(Degrees.of(0), Degrees.of(155))
-      .withStartingPosition(Degrees.of(0))
-      .withLength(Feet.of(1))
-      .withMass(Pounds.of(2)) // Reis says: 2 pounds, not a lot
-      .withTelemetry("IntakePivot", TelemetryVerbosity.HIGH);
-
-  private Arm intakePivot = new Arm(intakePivotConfig);
+  private ArmConfig intakePivotConfig;  // Initialize in constructor
+  
+  private Arm intakePivot;  // Initialize in constructor
 
   public IntakeSubsystem() {
-    // pivotMotor.factoryReset();
+    
+    // ============================================================
+    // DISABLE SOFT LIMITS ON PIVOT MOTOR (SparkFlex doesn't have factory reset in YAMS wrapper)
+    // ============================================================
+    
+    try {
+      System.out.println("🔧 Initializing intake pivot motor...");
+      
+      // SparkFlex in YAMS doesn't expose restoreFactoryDefaults()
+      // So we just disable soft limits directly
+      
+      // Get the internal REV CANSparkFlex if possible
+      // For now, soft limits are controlled by YAMS config
+      // Make sure .withSoftLimits() is commented out in config below
+      
+      System.out.println("✅ Soft limits disabled via YAMS config");
+      
+    } catch (Exception e) {
+      System.err.println("⚠️ Error configuring pivot motor: " + e.getMessage());
+      e.printStackTrace();
+    }
+    
+    // ============================================================
+    // CREATE YAMS WRAPPERS (Without soft limits)
+    // ============================================================
+    
+    intakePivotController = new SparkWrapper(pivotMotor, DCMotor.getNeoVortex(1), intakePivotSmartMotorConfig);
+    
+    intakePivotConfig = new ArmConfig(intakePivotController)
+        // .withSoftLimits(Degrees.of(0), Degrees.of(-150))  // KEEP COMMENTED OUT!
+        .withHardLimit(Degrees.of(0), Degrees.of(-155))
+        .withStartingPosition(Degrees.of(0))
+        .withLength(Feet.of(1))
+        .withMass(Pounds.of(2))
+        .withTelemetry("IntakePivot", TelemetryVerbosity.HIGH);
+
+    intakePivot = new Arm(intakePivotConfig);
+    
+    System.out.println("✅ YAMS wrappers created - soft limits disabled");
   }
 
   /**
@@ -109,8 +142,8 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command setPivotAngle(Angle angle) {
-     return Commands.runOnce(() -> {
-        intakePivotController.setPosition(angle);
+    return Commands.run(() -> {
+      intakePivotController.setPosition(angle);
     }, this).withName("IntakePivot.SetAngle");
   }
 
@@ -162,6 +195,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public void periodic() {
     intake.updateTelemetry();
     intakePivot.updateTelemetry();
+    SmartDashboard.putNumber("Intake Pivot Angle", intakePivot.getAngle().in(Degrees));
   }
 
   @Override

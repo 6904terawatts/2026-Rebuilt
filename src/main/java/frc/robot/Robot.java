@@ -5,6 +5,7 @@ import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
@@ -22,7 +23,7 @@ public class Robot extends LoggedRobot {
 
   public Robot() {
 
-    
+     CameraServer.startAutomaticCapture();
     Logger.recordMetadata("ProjectName", "CA_Ri3D_2026"); // Set a metadata value
 
     Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables

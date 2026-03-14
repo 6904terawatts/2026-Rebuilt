@@ -1,5 +1,6 @@
 package frc.robot.controls;
 
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.ShootOnTheMoveCommand;
 import frc.robot.subsystems.Superstructure;
@@ -9,8 +10,8 @@ public class OperatorControls {
   public static final boolean MACOS_WEIRD_CONTROLLER = true;
 
   public static void configure(int port, SwerveSubsystem drivetrain, Superstructure superstructure) {
-    CommandXboxController controller = new CommandXboxController(port);
-
+    // CommandXboxController controller = new CommandXboxController(port);
+    CommandGenericHID buttonBoard = new CommandGenericHID(port);
     // if (Robot.isSimulation()) {
     // controller.leftBumper().whileTrue(aimCommand(drivetrain, superstructure));
     // controller.start().whileTrue(fireAlgae(drivetrain, superstructure));
@@ -49,39 +50,69 @@ public class OperatorControls {
     // }
 
     // REAL CONTROLS
-    controller.start().onTrue(superstructure.rezeroIntakePivotAndTurretCommand().ignoringDisable(true));
+    //controller.start().onTrue(superstructure.rezeroIntakePivotAndTurretCommand().ignoringDisable(true));
 
-    controller.rightBumper()
-        .whileTrue(superstructure.setIntakeDeployAndRoll().withName("OperatorControls.intakeDeployed"));
-    controller.leftBumper().toggleOnTrue(
+     // buttonBoard.button(9).onTrue(superstructure.rezeroIntakePivotAndTurretCommand().ignoringDisable(true));
+   
+    // controller.rightBumper() //button 6
+    //     .whileTrue(superstructure.setIntakeDeployAndRoll().withName("OperatorControls.intakeDeployed"));
+
+        buttonBoard.button(6).whileTrue(superstructure.setIntakeDeployAndRoll().withName("OperatorControls.intakeDeployed"));
+        
+    // controller.leftBumper().toggleOnTrue( // button 5
+    //     new ShootOnTheMoveCommand(drivetrain, superstructure, () -> superstructure.getAimPoint())
+    //         .ignoringDisable(true)
+    //         .withName("OperatorControls.aimCommand"));
+
+
+        buttonBoard.button(5).toggleOnTrue( // button 5
         new ShootOnTheMoveCommand(drivetrain, superstructure, () -> superstructure.getAimPoint())
             .ignoringDisable(true)
             .withName("OperatorControls.aimCommand"));
-
             
-    controller.y().toggleOnTrue(superstructure.shootCommand());
-    controller.x().whileTrue(superstructure.stopShootingCommand());
+    // controller.y().toggleOnTrue(superstructure.shootCommand());// button 4
+    // controller.x().whileTrue(superstructure.stopShootingCommand()); //button3
 
-    controller.a().whileTrue(
+        buttonBoard.button(3).toggleOnTrue(superstructure.shootCommand());
+     buttonBoard.button(4).whileTrue(superstructure.stopShootingCommand());
+
+
+    // controller.a().whileTrue( //button 1
+    //     superstructure.feedAllCommand()
+    //         .finallyDo(() -> superstructure.stopFeedingAllCommand().schedule()));
+
+             buttonBoard.button(1).whileTrue( //button 1
         superstructure.feedAllCommand()
             .finallyDo(() -> superstructure.stopFeedingAllCommand().schedule()));
 
-    controller.b().whileTrue(
+    // controller.b().whileTrue( //button 2
+    //     superstructure.backFeedAllCommand()
+    //         .finallyDo(() -> superstructure.stopFeedingAllCommand().schedule()));
+
+
+            buttonBoard.button(2).whileTrue( //button 2
         superstructure.backFeedAllCommand()
             .finallyDo(() -> superstructure.stopFeedingAllCommand().schedule()));
 
-    controller.povUp().onTrue(superstructure.setTurretForward().withName("OperatorControls.setTurretForward"));
-    controller.povLeft().onTrue(superstructure.setTurretLeft().withName("OperatorControls.setTurretLeft"));
-    controller.povRight().onTrue(superstructure.setTurretRight().withName("OperatorControls.setTurretRight"));
+          // buttonBoard.button(12).onTrue(superstructure.setTurretRight().withName("ButtonBoard.setTurretRight"));
 
    
 
-    controller.rightTrigger().whileTrue(superstructure.intakeCommand()); //TODO: check if we need this
-    controller.leftTrigger().whileTrue(superstructure.ejectCommand());
-    
+    // controller.rightTrigger().whileTrue(superstructure.intakeCommand()); //button7
+buttonBoard.button(7).whileTrue(superstructure.intakeCommand()); //button7
+
+    // controller.leftTrigger().whileTrue(superstructure.ejectCommand()); // button 8
+   buttonBoard.button(8).whileTrue(superstructure.ejectCommand());
             
 
 
+
+
+
+buttonBoard.button(9).whileTrue(
+        superstructure.visionAimAtHubCommand()
+            .withName("Driver.VisionAimAtHub")
+    );
 
 
 

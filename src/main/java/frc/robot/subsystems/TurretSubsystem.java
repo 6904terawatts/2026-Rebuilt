@@ -61,7 +61,7 @@ public class TurretSubsystem extends SubsystemBase {
       .withMotorInverted(true)
       .withIdleMode(MotorMode.COAST)
       .withSoftLimit(Degrees.of(-MAX_ONE_DIR_FOV), Degrees.of(MAX_ONE_DIR_FOV))
-      .withStatorCurrentLimit(Amps.of(10))
+      .withStatorCurrentLimit(Amps.of(20))
       .withClosedLoopRampRate(Seconds.of(0.1))
       .withOpenLoopRampRate(Seconds.of(0.1));
 

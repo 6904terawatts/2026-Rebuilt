@@ -63,7 +63,7 @@ public class ShooterSubsystem extends SubsystemBase {
       .withGearing(new MechanismGearing(GearBox.fromReductionStages(1)))
       .withMotorInverted(false)
       .withIdleMode(MotorMode.COAST)
-      .withStatorCurrentLimit(Amps.of(40));
+      .withStatorCurrentLimit(Amps.of(35));
 
 private final SmartMotorController smc = new SparkWrapper(leaderSpark, DCMotor.getNeoVortex(1), smcConfig);
 
@@ -101,7 +101,7 @@ private final SmartMotorController smc = new SparkWrapper(leaderSpark, DCMotor.g
 
   public Command spinUp() {
     return Commands.run(() -> {
-        shooter.setSpeed(RPM.of(5000)).schedule();
+        shooter.setSpeed(RPM.of(4000)).schedule();
     }, this).withName("Shooter.SpinUp"); 
 
     // return setSpeed(RotationsPerSecond.of(50));
