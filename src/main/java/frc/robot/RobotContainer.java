@@ -33,6 +33,7 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import static edu.wpi.first.units.Units.Degrees;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
@@ -118,7 +119,7 @@ public class RobotContainer {
 
     // Add a simple auto option to have the robot drive forward for 1 second then
     // stop
-    autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(10));
+    autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(3));
 
     // Put the autoChooser on the SmartDashboard
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -144,21 +145,69 @@ public class RobotContainer {
     
 
     NamedCommands.registerCommand("driveBackwards",
-        drivebase.driveBackwards().withTimeout(1)
+        drivebase.driveBackwards().withTimeout(0)
             .withName("Auto.driveBackwards"));
 
     NamedCommands.registerCommand("driveForwards",
-        drivebase.driveForward().withTimeout(2)
+        drivebase.driveForward().withTimeout(0)
             .withName("Auto.driveForwards"));
-
-
-    NamedCommands.registerCommand("Shoot", 
-   shooter.spinUp().withTimeout(5)
-   .withName("Auto.shoot"));      
+    
    
    NamedCommands.registerCommand("Intake",
-    intake.intakeCommand().withTimeout(5)
+    intake.intakeCommand().withTimeout(4)
     .withName("auto.Intake"));
+
+
+
+      // Intake commands
+    NamedCommands.registerCommand("IntakeDown", 
+        Commands.sequence(
+            intake.setPivotAngle(Degrees.of(148)),
+            Commands.waitSeconds(0.3),
+            intake.intakeCommand()
+        ).withTimeout(2.0)
+    );
+    
+    NamedCommands.registerCommand("IntakeStow",
+        intake.setPivotAngle(Degrees.of(0))
+    );
+    
+    // Shooter commands
+    NamedCommands.registerCommand("ShooterSpinUp",
+        shooter.spinUp()
+    );
+    
+    NamedCommands.registerCommand("ShooterStop",
+        shooter.stop()
+    );
+    
+    // Feed command
+    NamedCommands.registerCommand("Feed",
+        Commands.parallel(
+            hopper.feedCommand(),
+            kicker.feedCommand()
+        ).withTimeout(1.0)
+    );
+    
+    // Complete shoot sequence
+    NamedCommands.registerCommand("ShootSequence",
+        Commands.sequence(
+            shooter.spinUp(),
+            Commands.waitSeconds(0.75),
+            Commands.parallel(
+                hopper.feedCommand(),
+                kicker.feedCommand()
+            ).withTimeout(1.0),
+            Commands.parallel(
+                shooter.stop(),
+                hopper.stopCommand(),
+                kicker.stopCommand()
+            )
+        )
+    );
+    
+    System.out.println("✅ Named Commands registered");
+
 
     // NamedCommands.registerCommand("Climb" ,
     // climber.climb().withTimeout(1)

@@ -72,7 +72,7 @@ public class DriverControls {
     drivetrain.getDrivetrain().setDefaultCommand(
         drivetrain.getDrivetrain().applyRequest(() -> {
             // Get raw stick inputs
-            double rawLeftY = controller.getLeftY();
+            double rawLeftY = -controller.getLeftY();
             double rawLeftX = controller.getLeftX();
             double rawRightX = -controller.getRightX();
             

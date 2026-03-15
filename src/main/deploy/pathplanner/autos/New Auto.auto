@@ -9,24 +9,6 @@
           "data": {
             "pathName": "Copy of move to hub"
           }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Move to trench"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "mid intake"
-          }
         }
       ]
     }

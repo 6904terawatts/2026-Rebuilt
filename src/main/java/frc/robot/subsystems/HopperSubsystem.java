@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 
@@ -13,7 +14,7 @@ import frc.robot.Constants;
 
 public class HopperSubsystem extends SubsystemBase {
 
-  private static final double HOPPER_SPEED = 1.00;
+  private static final double HOPPER_SPEED = .50;
 
   private TalonFX hopperKraken = new TalonFX(Constants.HopperConstants.kHopperMotorId);
   private DutyCycleOut hopperDutyCycleRequest = new DutyCycleOut(0);
@@ -33,10 +34,10 @@ public class HopperSubsystem extends SubsystemBase {
       config.CurrentLimits.StatorCurrentLimitEnable = true;
       config.CurrentLimits.SupplyCurrentLimit = 30;  // Battery current
       config.CurrentLimits.SupplyCurrentLimitEnable = true;
-      
       // Motor output
       config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-      //config.MotorOutput.Inverted = true;  // Match your current setup, flip if backwards
+      config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;  // Match your current setup, flip if backwards
+        // Match your current setup, flip if backwards
       
       // Voltage compensation
       config.Voltage.PeakForwardVoltage = 12.0;
@@ -62,15 +63,29 @@ public class HopperSubsystem extends SubsystemBase {
   /**
    * Command to run the hopper forward while held.
    */
-  public Command feedCommand() {
-    return Commands.run(() -> {
-      hopperKraken.setControl(hopperDutyCycleRequest.withOutput(-HOPPER_SPEED));
-    }, this)
-    .finallyDo(() -> {
-      hopperKraken.setControl(hopperDutyCycleRequest.withOutput(0));
-    })
-    .withName("Hopper.Feed");
-  }
+ public Command feedCommand() {
+  return Commands.run(() -> {
+    System.out.println("═══════════════════════");
+    System.out.println("🎯 HOPPER FEED DEBUG");
+    System.out.println("═══════════════════════");
+    
+    // Send command
+    hopperKraken.setControl(hopperDutyCycleRequest.withOutput(-HOPPER_SPEED));
+    
+    // Check what's happening
+    System.out.println("Voltage:     " + hopperKraken.getMotorVoltage().getValue() + " V");
+    System.out.println("Current:     " + hopperKraken.getSupplyCurrent().getValue() + " A");
+    System.out.println("Velocity:    " + hopperKraken.getVelocity().getValue() + " RPS");
+    System.out.println("Duty Cycle:  " + hopperKraken.getDutyCycle().getValue());
+    System.out.println("═══════════════════════");
+    
+  }, this)
+  .finallyDo(() -> {
+    System.out.println("🛑 STOPPED");
+    hopperKraken.setControl(hopperDutyCycleRequest.withOutput(0));
+  })
+  .withName("Hopper.Feed");
+}
 
   public Command backFeedCommand() {
     return Commands.run(() -> {

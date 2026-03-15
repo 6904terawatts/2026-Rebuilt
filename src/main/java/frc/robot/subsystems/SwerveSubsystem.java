@@ -102,9 +102,9 @@ public class SwerveSubsystem extends SubsystemBase {
                 },                          // Function to drive the robot
                 new PPHolonomicDriveController(
                     // PID constants for translation (X and Y)
-                    new com.pathplanner.lib.config.PIDConstants(5.0, 0.0, 0.0),
+                    new com.pathplanner.lib.config.PIDConstants(10.0, 0.0, 0.0),
                     // PID constants for rotation
-                    new com.pathplanner.lib.config.PIDConstants(5.0, 0.0, 0.0)
+                    new com.pathplanner.lib.config.PIDConstants(8.0, 0.0, 0.0)
                 ),
                 config,                     // Robot configuration
                 () -> {
