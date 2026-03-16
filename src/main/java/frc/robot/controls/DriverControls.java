@@ -150,7 +150,7 @@ public class DriverControls {
     );
     
     // B Button - Intake DOWN (deploy)
-    controller.b().onTrue(
+    controller.y().onTrue(
         superstructure.setIntakePivotAngle(Degrees.of(0))
             .withName("Driver.IntakeDown")
     );

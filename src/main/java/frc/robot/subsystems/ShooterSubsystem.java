@@ -101,7 +101,7 @@ private final SmartMotorController smc = new SparkWrapper(leaderSpark, DCMotor.g
 
   public Command spinUp() {
     return Commands.run(() -> {
-        shooter.setSpeed(RPM.of(5500)).schedule();
+        shooter.setSpeed(RPM.of(5800)).schedule();
     }, this).withName("Shooter.SpinUp"); 
 
     // return setSpeed(RotationsPerSecond.of(50));
