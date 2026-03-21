@@ -30,6 +30,8 @@ public class ShootOnTheMoveCommand extends Command {
   private Angle latestHoodAngle;
   private Angle latestTurretAngle;
 
+  private Command aimCommand;
+
   public ShootOnTheMoveCommand(SwerveSubsystem drivetrain, Superstructure superstructure,
       Supplier<Translation3d> aimPointSupplier) {
     this.drivetrain = drivetrain;
@@ -54,23 +56,24 @@ public class ShootOnTheMoveCommand extends Command {
     latestTurretAngle = superstructure.getTurretAngle();
     latestShootSpeed = superstructure.getShooterSpeed();
 
-    // TODO: when this current command ends, we should probably cancel the dynamic
-    // aim command
-    superstructure.aimDynamicCommand(
-        () -> {
-          return this.latestShootSpeed;
-        },
-        () -> {
-          return this.latestTurretAngle;
-        },
-        () -> {
-          return this.latestHoodAngle;
-        }).schedule();
+    aimCommand = superstructure.aimDynamicCommand(
+        () -> this.latestShootSpeed,
+        () -> this.latestTurretAngle,
+        () -> this.latestHoodAngle);
+    aimCommand.schedule();
   }
 
   @Override
   public boolean isFinished() {
     return false;
+  }
+
+  @Override
+  public void end(boolean interrupted) {
+    if (aimCommand != null) {
+      aimCommand.cancel();
+      aimCommand = null;
+    }
   }
 
   @Override
