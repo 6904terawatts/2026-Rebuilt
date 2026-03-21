@@ -116,7 +116,7 @@ public class IntakeSubsystem extends SubsystemBase {
     
     intakePivotConfig = new ArmConfig(intakePivotController)
         // .withSoftLimits(Degrees.of(0), Degrees.of(-150))  // KEEP COMMENTED OUT!
-        .withHardLimit(Degrees.of(0), Degrees.of(-155))
+        .withHardLimit(Degrees.of(-5), Degrees.of(155))
         .withStartingPosition(Degrees.of(0))
         .withLength(Feet.of(1))
         .withMass(Pounds.of(2))
