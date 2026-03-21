@@ -124,47 +124,52 @@ public class Superstructure extends SubsystemBase {
    * @return Command that aims at the hub and maintains aim
    */
   public Command visionAimAtHubCommand() {
-    return Commands.run(() -> {
-      // Get current alliance to know which hub to aim at
-      boolean isRed = DriverStation.getAlliance()
-          .map(alliance -> alliance == DriverStation.Alliance.Red)
-          .orElse(false);
-      
-      // Get the hub position (vision will try to use AprilTags first)
-      Translation3d hubPosition = visionSubsystem
-          .map(vision -> vision.getHubPosition(isRed))
-          .orElse(isRed ? Constants.AimPoints.RED_HUB.value : Constants.AimPoints.BLUE_HUB.value);
-      
-      // Get our robot's current pose
-      Translation2d robotPosition = swerveSubsystem
-          .map(swerve -> swerve.getPose().getTranslation())
-          .orElse(new Translation2d());
-      
-      Rotation2d robotHeading = swerveSubsystem
-          .map(swerve -> swerve.getPose().getRotation())
-          .orElse(new Rotation2d());
-      
-      // Calculate aiming parameters
-      AimingParameters params = calculateAimingParameters(
-          robotPosition,
-          robotHeading,
-          hubPosition
-      );
-      
-      // Set the calculated angles and speeds
-      setShooterSetpoints(params.shooterSpeed, params.turretAngle, params.hoodAngle);
-      
-      // Actually move the mechanisms to the target
-      turret.setAngle(params.turretAngle);
-      hood.setAngle(params.hoodAngle);
-      
-      // Log the aiming data
-      Logger.recordOutput("Superstructure/VisionAiming/TargetHub", hubPosition);
-      Logger.recordOutput("Superstructure/VisionAiming/Distance", params.distanceToHub);
-      Logger.recordOutput("Superstructure/VisionAiming/TurretAngle", params.turretAngle.in(Degrees));
-      Logger.recordOutput("Superstructure/VisionAiming/HoodAngle", params.hoodAngle.in(Degrees));
-      
-    }, this).withName("Superstructure.visionAimAtHub");
+    return Commands.parallel(
+        // Continuously calculate aiming parameters and update setpoints
+        Commands.run(() -> {
+          // Get current alliance to know which hub to aim at
+          boolean isRed = DriverStation.getAlliance()
+              .map(alliance -> alliance == DriverStation.Alliance.Red)
+              .orElse(false);
+
+          // Get the hub position (vision will try to use AprilTags first)
+          Translation3d hubPosition = visionSubsystem
+              .map(vision -> vision.getHubPosition(isRed))
+              .orElse(isRed ? Constants.AimPoints.RED_HUB.value : Constants.AimPoints.BLUE_HUB.value);
+
+          // Get our robot's current pose
+          Translation2d robotPosition = swerveSubsystem
+              .map(swerve -> swerve.getPose().getTranslation())
+              .orElse(new Translation2d());
+
+          Rotation2d robotHeading = swerveSubsystem
+              .map(swerve -> swerve.getPose().getRotation())
+              .orElse(new Rotation2d());
+
+          // Calculate aiming parameters
+          AimingParameters params = calculateAimingParameters(
+              robotPosition,
+              robotHeading,
+              hubPosition
+          );
+
+          // Store setpoints so aimDynamicCommand suppliers can read them
+          setShooterSetpoints(params.shooterSpeed, params.turretAngle, params.hoodAngle);
+
+          // Log the aiming data
+          Logger.recordOutput("Superstructure/VisionAiming/TargetHub", hubPosition);
+          Logger.recordOutput("Superstructure/VisionAiming/Distance", params.distanceToHub);
+          Logger.recordOutput("Superstructure/VisionAiming/TurretAngle", params.turretAngle.in(Degrees));
+          Logger.recordOutput("Superstructure/VisionAiming/HoodAngle", params.hoodAngle.in(Degrees));
+
+        }, this),
+        // Drive mechanisms to the continuously-updated setpoints
+        aimDynamicCommand(
+            () -> targetShooterSpeed,
+            () -> targetTurretAngle,
+            () -> targetHoodAngle
+        )
+    ).withName("Superstructure.visionAimAtHub");
   }
   
   /**
