@@ -19,6 +19,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -33,10 +34,21 @@ public class ShooterSubsystem extends SubsystemBase {
   // ============================================================================
   // KRAKEN X60 MOTOR (Direct Phoenix 6 control)
   // ============================================================================
-  
+
   private final TalonFX shooterKraken;
   private final VelocityVoltage velocityRequest;
   private double targetVelocityRPS;
+
+  // ============================================================================
+  // ADJUSTABLE SHOOTER SPEED (Driver-controlled via D-pad)
+  // ============================================================================
+
+  private static final double DEFAULT_TARGET_RPM = 3500.0;
+  private static final double MIN_TARGET_RPM = 500.0;
+  private static final double MAX_TARGET_RPM = 5000.0;
+  private static final double TARGET_RPM_STEP = 100.0;
+
+  private double adjustableTargetRPM = DEFAULT_TARGET_RPM;
 
   public ShooterSubsystem() {
     shooterKraken = new TalonFX(Constants.ShooterConstants.kLeaderMotorId);
@@ -118,12 +130,11 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   /**
-   * Spin up shooter to target speed (5800 RPM)
+   * Spin up shooter to adjustable target speed (controlled via D-pad).
    */
   public Command spinUp() {
     return Commands.run(() -> {
-      // 5800 RPM = 96.67 RPS
-      double targetRPS = 3500.0 / 60.0;
+      double targetRPS = adjustableTargetRPM / 60.0;
       targetVelocityRPS = targetRPS;
       shooterKraken.setControl(velocityRequest.withVelocity(targetRPS));
     }, this).withName("Shooter.SpinUp");
@@ -137,6 +148,35 @@ public class ShooterSubsystem extends SubsystemBase {
       targetVelocityRPS = 0;
       shooterKraken.setControl(velocityRequest.withVelocity(0));
     }, this).withName("Shooter.Stop");
+  }
+
+  // ============================================================================
+  // ADJUSTABLE SPEED COMMANDS (D-pad left/right)
+  // ============================================================================
+
+  /**
+   * Increase adjustable target RPM by one step.
+   */
+  public Command incrementSpeed() {
+    return Commands.runOnce(() -> {
+      adjustableTargetRPM = MathUtil.clamp(adjustableTargetRPM + TARGET_RPM_STEP, MIN_TARGET_RPM, MAX_TARGET_RPM);
+    }).withName("Shooter.IncrementSpeed");
+  }
+
+  /**
+   * Decrease adjustable target RPM by one step.
+   */
+  public Command decrementSpeed() {
+    return Commands.runOnce(() -> {
+      adjustableTargetRPM = MathUtil.clamp(adjustableTargetRPM - TARGET_RPM_STEP, MIN_TARGET_RPM, MAX_TARGET_RPM);
+    }).withName("Shooter.DecrementSpeed");
+  }
+
+  /**
+   * Get the current adjustable target RPM.
+   */
+  public double getAdjustableTargetRPM() {
+    return adjustableTargetRPM;
   }
 
   /**
@@ -183,6 +223,7 @@ public class ShooterSubsystem extends SubsystemBase {
     Logger.recordOutput("Shooter/KrakenCurrent", shooterKraken.getSupplyCurrent().getValue());
     Logger.recordOutput("Shooter/KrakenTemp", shooterKraken.getDeviceTemp().getValue());
     Logger.recordOutput("Shooter/TargetVelocityRPS", targetVelocityRPS);
+    Logger.recordOutput("Shooter/AdjustableTargetRPM", adjustableTargetRPM);
     Logger.recordOutput("Shooter/AtSpeed", atTargetSpeed());
   }
 

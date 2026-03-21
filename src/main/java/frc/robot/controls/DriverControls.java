@@ -196,6 +196,10 @@ public class DriverControls {
     
     controller.povUp().whileTrue(superstructure.turretManualCommand(0.2));
     controller.povDown().whileTrue(superstructure.turretManualCommand(-0.2));
+
+    // D-PAD Left/Right - Adjust Shooter Speed (+/- 100 RPM per press)
+    controller.povRight().onTrue(superstructure.shooter.incrementSpeed());
+    controller.povLeft().onTrue(superstructure.shooter.decrementSpeed());
     
     // ============================================================================
     // START BUTTON (Lock Wheels)
