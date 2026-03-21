@@ -107,7 +107,7 @@ public class RobotContainer {
     new Trigger(() -> isOnAllianceOutpostSide())
         .onChange(Commands.runOnce(() -> onZoneChanged()).ignoringDisable(true));
 
-    if (!Robot.isReal() || true) {
+    if (!Robot.isReal()) {
       DriverStation.silenceJoystickConnectionWarning(true);
     }
 
