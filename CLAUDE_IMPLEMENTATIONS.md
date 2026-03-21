@@ -235,3 +235,31 @@ This restores the intended behavior: warnings are only silenced in simulation.
 - Remove the TODO comments on lines 57-58 since this resolves them.
 
 **Commit message:** `Fix ShootOnTheMoveCommand to cancel child aim command on end`
+
+SUMMARY: 
+● All 9 implementations are done, each in its own commit:
+
+  ┌─────┬─────────┬────────────────────────────────────────────────────────────────────────────┐
+  │  #  │ Commit  │                                    Fix                                     │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 1   │ 1209be4 │ Adjustable shooter speed — D-pad left/right, 500-5000 RPM, 100 RPM steps   │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 2   │ cb2f1db │ withTimeout(0) → withTimeout(2) on auto drive commands                     │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 3   │ 3b8942c │ PathPlanner gear ratio 6.75 → 6.12 to match TunerConstants                 │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 4   │ c323e58 │ Intake hard limits (0, -155) → (-5, 155) to match setpoints                │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 5   │ b7d77cc │ Vision aim restructured to use aimDynamicCommand() with suppliers          │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 6   │ 0fe4884 │ Removed resetPose() in Robot.java — SwerveSubsystem already handles fusion │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 7   │ 4bfb5ef │ Moved Zero Gyro from Y (conflicted with Intake) to Back button             │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 8   │ 8d23f2e │ Removed `                                                                  │
+  ├─────┼─────────┼────────────────────────────────────────────────────────────────────────────┤
+  │ 9   │ 8eeb353 │ ShootOnTheMoveCommand now cancels child aim command in end()               │
+  └─────┴─────────┴────────────────────────────────────────────────────────────────────────────┘
+
+  Each commit is self-contained and can be individually reverted with git revert <hash> if any fix
+  causes issues during testing.
