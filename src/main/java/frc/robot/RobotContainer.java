@@ -145,11 +145,11 @@ public class RobotContainer {
     
 
     NamedCommands.registerCommand("driveBackwards",
-        drivebase.driveBackwards().withTimeout(0)
+        drivebase.driveBackwards().withTimeout(2)
             .withName("Auto.driveBackwards"));
 
     NamedCommands.registerCommand("driveForwards",
-        drivebase.driveForward().withTimeout(0)
+        drivebase.driveForward().withTimeout(2)
             .withName("Auto.driveForwards"));
     
    
