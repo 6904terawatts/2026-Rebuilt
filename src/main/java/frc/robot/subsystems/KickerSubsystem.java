@@ -36,7 +36,7 @@ public class KickerSubsystem extends SubsystemBase {
       ))) // 3:1 gear reduction
       .withMotorInverted(true)  
       .withIdleMode(MotorMode.BRAKE)
-      .withStatorCurrentLimit(Amps.of(35));
+      .withStatorCurrentLimit(Amps.of(25));
 
   private SmartMotorController smc = new SparkWrapper(kickerSpark, DCMotor.getNeoVortex(1), smcConfig);
 

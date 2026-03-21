@@ -105,7 +105,7 @@ public final class Constants {
 
   public static class ShooterConstants {
     // 2 Neos, 4in shooter wheels
-    public static final int kLeaderMotorId = 15;
+    public static final int kLeaderMotorId = 45;
    //public static final int kFollowerMotorId = 16;
   }
 

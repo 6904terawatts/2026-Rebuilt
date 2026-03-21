@@ -145,7 +145,7 @@ public class DriverControls {
     
     // A Button - Intake UP (stow)
     controller.a().onTrue(
-        superstructure.setIntakePivotAngle(Degrees.of(-144))
+        superstructure.setIntakePivotAngle(Degrees.of(-160))
             .withName("Driver.IntakeUp")
     );
     

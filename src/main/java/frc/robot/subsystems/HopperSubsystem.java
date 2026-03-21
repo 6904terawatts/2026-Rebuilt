@@ -40,8 +40,8 @@ public class HopperSubsystem extends SubsystemBase {
         // Match your current setup, flip if backwards
       
       // Voltage compensation
-      config.Voltage.PeakForwardVoltage = 12.0;
-      config.Voltage.PeakReverseVoltage = -12.0;
+      config.Voltage.PeakForwardVoltage = 9.0;
+      config.Voltage.PeakReverseVoltage = -9.0;
       
       // Ramp rate for smooth acceleration
       config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.1;
