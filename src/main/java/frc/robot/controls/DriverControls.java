@@ -149,7 +149,7 @@ public class DriverControls {
             .withName("Driver.IntakeUp")
     );
     
-    // B Button - Intake DOWN (deploy)
+    // Y Button - Intake DOWN (deploy)
     controller.y().onTrue(
         superstructure.setIntakePivotAngle(Degrees.of(0))
             .withName("Driver.IntakeDown")
@@ -180,8 +180,8 @@ public class DriverControls {
         ).withName("Drive.LimelightTrack")
     );
     
-    // Y Button - Reset Gyro
-    controller.y().onTrue(drivetrain.zeroGyro());
+    // Back Button - Reset Gyro
+    controller.back().onTrue(drivetrain.zeroGyro());
     
     // ============================================================================
     // TRIGGERS (Intake/Eject)
