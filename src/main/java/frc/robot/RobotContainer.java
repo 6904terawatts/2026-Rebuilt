@@ -1,4 +1,3 @@
-
 package frc.robot;
 
 import java.io.File;
@@ -22,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ControllerConstants;
+import frc.robot.autos.BackupAndShootAuto;
 import frc.robot.controls.DriverControls;
 import frc.robot.controls.OperatorControls;
 import frc.robot.controls.PoseControls;
@@ -29,6 +29,7 @@ import frc.robot.subsystems.HoodSubsystem;
 import frc.robot.subsystems.HopperSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
+import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -48,13 +49,17 @@ public class RobotContainer {
   // This MUST be created before being passed to other subsystems
   private final VisionSubsystem vision = new VisionSubsystem();
   
+  // Auto-Align Limelight subsystem - automatically finds and aligns to hub
+  private final LimelightSubsystem autoAlign = new LimelightSubsystem(drivebase);
+  
   // Shooting mechanism subsystems
-  private final TurretSubsystem turret = new TurretSubsystem();
+  //private final TurretSubsystem turret = new TurretSubsystem();
   private final ShooterSubsystem shooter = new ShooterSubsystem();
   private final IntakeSubsystem intake = new IntakeSubsystem();
   private final HopperSubsystem hopper = new HopperSubsystem();
   private final KickerSubsystem kicker = new KickerSubsystem();
   private final HoodSubsystem hood = new HoodSubsystem();
+   private final TurretSubsystem turret = new TurretSubsystem();
 
   // Superstructure coordinates all shooting mechanisms
   private final Superstructure superstructure = new Superstructure(shooter, turret, hood, intake, hopper, kicker);
@@ -121,13 +126,16 @@ public class RobotContainer {
     // stop
     autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(3));
 
+    autoChooser.addOption("Backup and Shoot", 
+    BackupAndShootAuto.create(drivebase, shooter, hopper, kicker));
+
     // Put the autoChooser on the SmartDashboard
     SmartDashboard.putData("Auto Chooser", autoChooser);
   }
 
   private void configureBindings() {
     // Set up controllers
-    DriverControls.configure(ControllerConstants.kDriverControllerPort, drivebase, superstructure);
+    DriverControls.configure(ControllerConstants.kDriverControllerPort, drivebase, superstructure, autoAlign);
     OperatorControls.configure(ControllerConstants.kOperatorControllerPort, drivebase, superstructure);
     PoseControls.configure(ControllerConstants.kPoseControllerPort, drivebase);
 
@@ -180,6 +188,10 @@ public class RobotContainer {
     NamedCommands.registerCommand("ShooterStop",
         shooter.stop()
     );
+
+    NamedCommands.registerCommand("BackupAndShoot",
+    BackupAndShootAuto.create(drivebase, shooter, hopper, kicker)
+);
     
     // Feed command
     NamedCommands.registerCommand("Feed",

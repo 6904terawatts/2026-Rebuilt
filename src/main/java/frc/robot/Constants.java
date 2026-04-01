@@ -106,13 +106,14 @@ public final class Constants {
   public static class ShooterConstants {
     // 2 Neos, 4in shooter wheels
     public static final int kLeaderMotorId = 45;
+    public static final int kFollowerMotorId = 46;
    //public static final int kFollowerMotorId = 16;
   }
 
   public static class TurretConstants {
     // 1 Neo, 6.875 in diameter, 4:1 gearbox, 10:1 pivot gearing, non-continuous
     // 360 deg
-    public static final int kMotorId = 5;
+   public static final int kMotorId = 5;
   }
 
   public static class HoodConstants {
@@ -134,6 +135,7 @@ public final class Constants {
 
   // Kicker subsystem CAN IDs start at 50
   public static class KickerConstants {
-    public static final int kKickerMotorId = 50;
+    public static final int kLeaderKickerMotorId = 50;   // Leader NEO
+    public static final int kFollowerKickerMotorId = 51; // Follower NEO (inverted)
   }
 }

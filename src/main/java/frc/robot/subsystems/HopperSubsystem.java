@@ -14,7 +14,7 @@ import frc.robot.Constants;
 
 public class HopperSubsystem extends SubsystemBase {
 
-  private static final double HOPPER_SPEED = .50;
+  private static final double HOPPER_SPEED = .25;
 
   private TalonFX hopperKraken = new TalonFX(Constants.HopperConstants.kHopperMotorId);
   private DutyCycleOut hopperDutyCycleRequest = new DutyCycleOut(0);
@@ -30,9 +30,9 @@ public class HopperSubsystem extends SubsystemBase {
       TalonFXConfiguration config = new TalonFXConfiguration();
       
       // Current limits - Kraken can handle more than NEO
-      config.CurrentLimits.StatorCurrentLimit = 40;  // Motor current (was 35A for NEO)
+      config.CurrentLimits.StatorCurrentLimit = 80;  // Motor current (was 35A for NEO)
       config.CurrentLimits.StatorCurrentLimitEnable = true;
-      config.CurrentLimits.SupplyCurrentLimit = 30;  // Battery current
+      config.CurrentLimits.SupplyCurrentLimit = 40;  // Battery current
       config.CurrentLimits.SupplyCurrentLimitEnable = true;
       // Motor output
       config.MotorOutput.NeutralMode = NeutralModeValue.Brake;

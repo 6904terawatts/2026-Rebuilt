@@ -24,6 +24,8 @@ public class Robot extends LoggedRobot {
   public Robot() {
 
      CameraServer.startAutomaticCapture();
+      CameraServer.startAutomaticCapture();
+       CameraServer.startAutomaticCapture();
     Logger.recordMetadata("ProjectName", "CA_Ri3D_2026"); // Set a metadata value
 
     Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables

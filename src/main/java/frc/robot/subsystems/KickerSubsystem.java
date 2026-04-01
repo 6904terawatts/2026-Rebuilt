@@ -1,78 +1,156 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
+import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.system.plant.DCMotor;
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Pounds;
-import static edu.wpi.first.units.Units.RPM;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import yams.gearing.GearBox;
-import yams.gearing.MechanismGearing;
-import yams.mechanisms.config.FlyWheelConfig;
-import yams.mechanisms.velocity.FlyWheel;
-import yams.motorcontrollers.SmartMotorController;
-import yams.motorcontrollers.SmartMotorControllerConfig;
-import yams.motorcontrollers.SmartMotorControllerConfig.ControlMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.MotorMode;
-import yams.motorcontrollers.SmartMotorControllerConfig.TelemetryVerbosity;
-import yams.motorcontrollers.local.SparkWrapper;
 
 public class KickerSubsystem extends SubsystemBase {
-
-  private static final double KICKER_SPEED = 1.30;
-
-  // SparkFlex motor controller with NEO Vortex motor
-  private SparkFlex kickerSpark = new SparkFlex(Constants.KickerConstants.kKickerMotorId, MotorType.kBrushless);
-
-  private SmartMotorControllerConfig smcConfig = new SmartMotorControllerConfig(this)
-      .withControlMode(ControlMode.OPEN_LOOP)
-      .withTelemetry("KickerMotor", TelemetryVerbosity.HIGH)
-      .withGearing(new MechanismGearing(GearBox.fromReductionStages(5
-      ))) // 3:1 gear reduction
-      .withMotorInverted(true)  
-      .withIdleMode(MotorMode.BRAKE)
-      .withStatorCurrentLimit(Amps.of(25));
-
-  private SmartMotorController smc = new SparkWrapper(kickerSpark, DCMotor.getNeoVortex(1), smcConfig);
-
-  private final FlyWheelConfig kickerConfig = new FlyWheelConfig(smc)
-      .withDiameter(Inches.of(4))
-      .withMass(Pounds.of(0.5))
-      // .withUpperSoftLimit(RPM.of(6000))
-      // .withLowerSoftLimit(RPM.of(-6000))
-      .withTelemetry("Kicker", TelemetryVerbosity.HIGH);
-
-  private FlyWheel kicker = new FlyWheel(kickerConfig);
+  
+  // ============================================================================
+  // DUAL NEO MOTORS (Leader + Follower Inverted)
+  // ============================================================================
+  
+  private static final double KICKER_SPEED = 0.8;  // 80% duty cycle
+  
+  private final SparkMax leaderKicker;
+  private final SparkMax followerKicker;
 
   public KickerSubsystem() {
+    leaderKicker = new SparkMax(Constants.KickerConstants.kLeaderKickerMotorId, MotorType.kBrushless);
+    followerKicker = new SparkMax(Constants.KickerConstants.kFollowerKickerMotorId, MotorType.kBrushless);
+    
+    configureMotors();
   }
 
   /**
-   * Command to run the kicker forward while held, stops when released.
+   * Configure both kicker motors
+   */
+  @SuppressWarnings("removal")
+  private void configureMotors() {
+    try {
+      System.out.println("🔧 Configuring dual NEO kicker motors...");
+      
+      // ====================================================================
+      // LEADER MOTOR CONFIGURATION
+      // ====================================================================
+      
+      SparkMaxConfig leaderConfig = new SparkMaxConfig();
+      
+      // Current limits - 40A max
+      leaderConfig.smartCurrentLimit(40);
+      
+      // Idle mode - brake to stop quickly
+      leaderConfig.idleMode(IdleMode.kBrake);
+      
+      // Inversion - normal direction
+      leaderConfig.inverted(true);
+      
+      // Voltage compensation
+      leaderConfig.voltageCompensation(12.0);
+      
+      // Apply leader config
+      leaderKicker.configure(leaderConfig, SparkMax.ResetMode.kResetSafeParameters, 
+          SparkMax.PersistMode.kPersistParameters);
+      
+      // ====================================================================
+      // FOLLOWER MOTOR CONFIGURATION
+      // ====================================================================
+      
+      SparkMaxConfig followerConfig = new SparkMaxConfig();
+      
+      // Current limits - 40A max
+      followerConfig.smartCurrentLimit(40);
+      
+      // Idle mode - brake
+      followerConfig.idleMode(IdleMode.kBrake);
+      
+      // INVERTED from leader (opposite side of kicker roller)
+      followerConfig.inverted(true);
+      
+      // Voltage compensation
+      followerConfig.voltageCompensation(12.0);
+      
+      // Set follower to follow leader
+      //followerConfig.follow(leaderKicker);
+      
+      // Apply follower config
+      followerKicker.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, 
+          SparkMax.PersistMode.kPersistParameters);
+      
+      System.out.println("  ↳ Leader: CAN " + Constants.KickerConstants.kLeaderKickerMotorId);
+      System.out.println("  ↳ Follower: CAN " + Constants.KickerConstants.kFollowerKickerMotorId + " (inverted)");
+      System.out.println("  ↳ Current limit: 40A per motor");
+      System.out.println("  ↳ Brake mode");
+      System.out.println("  ↳ Kicker speed: " + (KICKER_SPEED * 100) + "%");
+      System.out.println("✅ Dual NEO kicker configured");
+      
+    } catch (Exception e) {
+      System.err.println("⚠️ Error configuring kicker: " + e.getMessage());
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Feed game pieces through kicker (forward)
    */
   public Command feedCommand() {
-    return kicker.set(KICKER_SPEED).finallyDo(() -> smc.setDutyCycle(0)).withName("Kicker.Feed");
+    return Commands.run(() -> {
+      leaderKicker.set(KICKER_SPEED);
+      followerKicker.set(-KICKER_SPEED);
+      // Follower automatically follows
+      System.out.println("🎯 KICKER FEEDING!");
+    }, this).withName("Kicker.Feed");
   }
 
   /**
-   * Command to stop the kicker.
+   * Reverse kicker (unjam/eject)
+   */
+  public Command reverseCommand() {
+    return Commands.run(() -> {
+      leaderKicker.set(-KICKER_SPEED);
+      followerKicker.set(KICKER_SPEED);
+      // Follower automatically follows (inverted)
+      System.out.println("🔄 KICKER REVERSING!");
+    }, this).withName("Kicker.Reverse");
+  }
+
+  /**
+   * Stop kicker
    */
   public Command stopCommand() {
-    return kicker.set(0).withName("Kicker.Stop");
+    return Commands.runOnce(() -> {
+      leaderKicker.set(0);
+      followerKicker.set(0);
+      // Follower automatically stops
+      System.out.println("🛑 KICKER STOPPED");
+    }, this).withName("Kicker.Stop");
   }
 
   @Override
   public void periodic() {
-    kicker.updateTelemetry();
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    kicker.simIterate();
+    // SmartDashboard telemetry
+    SmartDashboard.putNumber("Kicker/Leader Current", leaderKicker.getOutputCurrent());
+    SmartDashboard.putNumber("Kicker/Follower Current", followerKicker.getOutputCurrent());
+    SmartDashboard.putNumber("Kicker/Total Current", 
+        leaderKicker.getOutputCurrent() + followerKicker.getOutputCurrent());
+    SmartDashboard.putNumber("Kicker/Leader Velocity", leaderKicker.getEncoder().getVelocity());
+    SmartDashboard.putNumber("Kicker/Follower Velocity", followerKicker.getEncoder().getVelocity());
+    SmartDashboard.putNumber("Kicker/Leader Temp", leaderKicker.getMotorTemperature());
+    SmartDashboard.putNumber("Kicker/Follower Temp", followerKicker.getMotorTemperature());
+    
+    // AdvantageKit logging
+    Logger.recordOutput("Kicker/LeaderCurrent", leaderKicker.getOutputCurrent());
+    Logger.recordOutput("Kicker/FollowerCurrent", followerKicker.getOutputCurrent());
+    Logger.recordOutput("Kicker/LeaderVelocity", leaderKicker.getEncoder().getVelocity());
+    Logger.recordOutput("Kicker/FollowerVelocity", followerKicker.getEncoder().getVelocity());
   }
 }

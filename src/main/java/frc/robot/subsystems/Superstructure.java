@@ -528,6 +528,11 @@ public class Superstructure extends SubsystemBase {
     // return shooter.sysId().withName("Superstructure.shoot");
     return shooter.spinUp().withName("Superstructure.shoot");
   }
+  
+    public Command passCommand() {
+    // return shooter.sysId().withName("Superstructure.shoot");
+    return shooter.passSpeed().withName("Superstructure.pass");
+  }
 
   /**
    * Command to stop shooting - stops shooter.

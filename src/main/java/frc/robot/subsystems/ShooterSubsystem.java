@@ -6,9 +6,12 @@ import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 
 import static edu.wpi.first.units.Units.Inches;
@@ -27,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import com.ctre.phoenix6.controls.NeutralOut;
 
 public class ShooterSubsystem extends SubsystemBase {
   
@@ -35,11 +39,14 @@ public class ShooterSubsystem extends SubsystemBase {
   // ============================================================================
   
   private final TalonFX shooterKraken;
+  private final TalonFX shooterKrakenFollower;
   private final VelocityVoltage velocityRequest;
   private double targetVelocityRPS;
+  private final NeutralOut neutralRequest = new NeutralOut();
 
   public ShooterSubsystem() {
     shooterKraken = new TalonFX(Constants.ShooterConstants.kLeaderMotorId);
+    shooterKrakenFollower = new TalonFX(Constants.ShooterConstants.kFollowerMotorId);
     velocityRequest = new VelocityVoltage(0);
     targetVelocityRPS = 0;
     
@@ -54,11 +61,12 @@ public class ShooterSubsystem extends SubsystemBase {
       System.out.println("🔧 Configuring Kraken X60 shooter motor...");
       
       TalonFXConfiguration config = new TalonFXConfiguration();
+      TalonFXConfiguration followerConfig = new TalonFXConfiguration();
       
       // Current limits - Kraken can handle more power for shooter!
       config.CurrentLimits.StatorCurrentLimit = 40;  // Motor current (was 35A for NEO)
       config.CurrentLimits.StatorCurrentLimitEnable = true;
-      config.CurrentLimits.SupplyCurrentLimit = 30;  // Battery current
+      config.CurrentLimits.SupplyCurrentLimit = 40;  // Battery current
       config.CurrentLimits.SupplyCurrentLimitEnable = true;
       
       // Motor output
@@ -77,14 +85,38 @@ public class ShooterSubsystem extends SubsystemBase {
       slot0.kV = 0.12;   // Feedforward (12V / 100 RPS = 0.12) - CRITICAL!
       config.Slot0 = slot0;
       
+      
+       // Current limits - Kraken can handle more power for shooter!
+      followerConfig.CurrentLimits.StatorCurrentLimit = 80;  // Motor current (was 35A for NEO)
+      followerConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+      followerConfig.CurrentLimits.SupplyCurrentLimit = 40;  // Battery current
+      followerConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+      
+      // Motor output
+      followerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;  // Coast for shooter
+      followerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;  // Change if backwards
+      
+      // Voltage compensation
+      followerConfig.Voltage.PeakForwardVoltage = 12.0;
+      followerConfig.Voltage.PeakReverseVoltage = -12.0;
+      followerConfig.Slot0 = slot0;
+      // PID configuration for velocity control
+     
+      
+
       // Apply configuration
       shooterKraken.getConfigurator().apply(config);
+      shooterKrakenFollower.getConfigurator().apply(followerConfig);
       
       System.out.println("  ↳ Stator limit: 60A");
       System.out.println("  ↳ Supply limit: 40A");
       System.out.println("  ↳ Coast mode");
       System.out.println("  ↳ PID: P=0.1, V=0.12");
       System.out.println("✅ Kraken X60 shooter configured");
+
+      
+      //shooterKrakenFollower.setControl(new Follower(shooterKraken.getDeviceID(), MotorAlignmentValue.Aligned));
+
       
     } catch (Exception e) {
       System.err.println("⚠️ Error configuring Kraken: " + e.getMessage());
@@ -102,6 +134,7 @@ public class ShooterSubsystem extends SubsystemBase {
       double rps = speed.in(RPM) / 60.0;
       targetVelocityRPS = rps;
       shooterKraken.setControl(velocityRequest.withVelocity(rps));
+      shooterKrakenFollower.setControl(velocityRequest.withVelocity(rps));
     }, this).withName("Shooter.SetSpeed");
   }
 
@@ -114,19 +147,32 @@ public class ShooterSubsystem extends SubsystemBase {
       double rps = speed.in(RPM) / 60.0;
       targetVelocityRPS = rps;
       shooterKraken.setControl(velocityRequest.withVelocity(rps));
+      shooterKrakenFollower.setControl(velocityRequest.withVelocity(rps));
     }, this).withName("Shooter.SetSpeedDynamic");
   }
 
   /**
-   * Spin up shooter to target speed (5800 RPM)
+   * Spin up shooter to SHOOT speed (4000 RPM)
    */
   public Command spinUp() {
     return Commands.run(() -> {
-      // 5800 RPM = 96.67 RPS
-      double targetRPS = 3500.0 / 60.0;
+      double targetRPS = 3500.0 / 60.0;  // 4000 RPM for shooting
       targetVelocityRPS = targetRPS;
       shooterKraken.setControl(velocityRequest.withVelocity(targetRPS));
-    }, this).withName("Shooter.SpinUp");
+      shooterKrakenFollower.setControl(velocityRequest.withVelocity(targetRPS));
+    }, this).withName("Shooter.Shoot");
+  }
+
+  /**
+   * Spin up shooter to PASS speed (2000 RPM)
+   */
+  public Command passSpeed() {
+    return Commands.run(() -> {
+      double targetRPS = 4000.0 / 60.0;  // 2000 RPM for passing
+      targetVelocityRPS = targetRPS;
+      shooterKraken.setControl(velocityRequest.withVelocity(targetRPS));
+      shooterKrakenFollower.setControl(velocityRequest.withVelocity(targetRPS));
+    }, this).withName("Shooter.Pass");
   }
 
   /**
@@ -134,10 +180,11 @@ public class ShooterSubsystem extends SubsystemBase {
    */
   public Command stop() {
     return Commands.runOnce(() -> {
-      targetVelocityRPS = 0;
-      shooterKraken.setControl(velocityRequest.withVelocity(0));
+        targetVelocityRPS = 0;
+        shooterKraken.setControl(neutralRequest);
+        shooterKrakenFollower.setControl(neutralRequest);
     }, this).withName("Shooter.Stop");
-  }
+}
 
   /**
    * Get current shooter speed as AngularVelocity

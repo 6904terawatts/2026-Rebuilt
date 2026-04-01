@@ -339,7 +339,7 @@ SmartDashboard.putData(field);
     public Command driveBackwards() {
         return Commands.run(() -> {
             drivetrain.setControl(robotCentric
-                .withVelocityX(-1.0) // 1 m/s backward
+                .withVelocityX(.5) // 1 m/s backward
                 .withVelocityY(0)
                 .withRotationalRate(0));
         }, drivetrain);

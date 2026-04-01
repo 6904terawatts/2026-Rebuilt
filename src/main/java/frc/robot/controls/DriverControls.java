@@ -1,6 +1,3 @@
-
-
-
 package frc.robot.controls;
 
 import org.ironmaple.simulation.SimulatedArena;
@@ -26,6 +23,7 @@ import frc.robot.Constants.ControllerConstants;
 import frc.robot.LimelightHelpers;
 import frc.robot.Robot;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.util.maplesim.RebuiltFuelOnFly;
@@ -50,7 +48,7 @@ public class DriverControls {
     return hubPose;
   }
 
-  public static void configure(int port, SwerveSubsystem drivetrain, Superstructure superstructure) {
+  public static void configure(int port, SwerveSubsystem drivetrain, Superstructure superstructure, LimelightSubsystem autoAlign) {
     CommandXboxController controller = new CommandXboxController(port);
 
     // Get max speeds from TunerConstants
@@ -157,31 +155,17 @@ public class DriverControls {
    
     
     // ============================================================================
-    // VISION & LIMELIGHT (Back/X/Y)
+    // VISION & LIMELIGHT (Right Trigger/X/Y)
     // ============================================================================
     
-    // Back Button - Vision Aim at Hub
-    controller.rightTrigger().whileTrue(
-        superstructure.visionAimAtHubCommand()
-            .withName("Driver.VisionAimAtHub")
-    );
+    // Right Trigger - Vision Aim at Hub
+  
     
-    // X Button - Limelight Tracking Drive (drive toward AprilTag)
-    SwerveRequest.RobotCentric limelightDrive = new SwerveRequest.RobotCentric();
-    controller.x().whileTrue(
-        Commands.run(() ->
-            drivetrain.getDrivetrain().setControl(
-                limelightDrive
-                    .withVelocityX(LimelightHelpers.getTY("limelight") * 0.1)
-                    .withVelocityY(-LimelightHelpers.getTX("limelight") * 0.05)
-                    .withRotationalRate(0)
-            ),
-            drivetrain.getDrivetrain()
-        ).withName("Drive.LimelightTrack")
-    );
+    // X Button - Reset Gyro
+    controller.x().onTrue(drivetrain.zeroGyro());
     
-    // Y Button - Reset Gyro
-    controller.y().onTrue(drivetrain.zeroGyro());
+    // Y Button - Intake DOWN (deploy)
+    // (Moved from Y to here since Back is now auto-align)
     
     // ============================================================================
     // TRIGGERS (Intake/Eject)
@@ -191,11 +175,14 @@ public class DriverControls {
     // controller.leftTrigger().whileTrue(superstructure.ejectCommand());
     
     // ============================================================================
-    // D-PAD (Manual Turret Control)
+    // AUTO-ALIGN TO HUB (Back Button)
     // ============================================================================
     
-    controller.povUp().whileTrue(superstructure.turretManualCommand(0.2));
-    controller.povDown().whileTrue(superstructure.turretManualCommand(-0.2));
+    // Back Button - Auto-align to hub (hold to align, release to stop)
+    // Finds ANY hub AprilTag and aligns to ~4 feet away
+    controller.b().whileTrue(autoAlign.autoAlign());
+    
+    System.out.println("✅ Auto-align button configured (Back Button)");
     
     // ============================================================================
     // START BUTTON (Lock Wheels)
